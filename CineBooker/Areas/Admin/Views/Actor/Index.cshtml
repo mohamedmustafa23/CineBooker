@@ -1,0 +1,86 @@
+@model IEnumerable<Actor>
+@{
+    ViewData["Title"] = "Actors";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-person-video3 me-2"></i>Actors</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Actor
+    </a>
+</div>
+
+<div class="filter-card">
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="searchName" name="name" placeholder="Search actors..." value="@ViewBag.name">
+                <label for="searchName">Search by Name</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-floating">
+                <select class="form-select" id="filterGender" name="gender">
+                    <option value="">All Genders</option>
+                    <option value="Male" @@(ViewBag.gender == "Male" ? "selected" : "")>Male</option>
+                    <option value="Female" @@(ViewBag.gender == "Female" ? "selected" : "")>Female</option>
+                </select>
+                <label for="filterGender">Gender</label>
+            </div>
+        </div>
+        <div class="col-md-5 d-flex align-items-center gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search me-1"></i>Filter
+            </button>
+            <a href="/Actor" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Movies</th>
+                        <th>Bio</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var actor in Model)
+
+                    {
+                        <tr>
+                            <td>
+                                <img src="@actor.PhotoUrl" class="rounded-circle" height="50" width="50">
+                            </td>
+                            <td class="fw-semibold">@actor.Name</td>
+                            <td>@actor.Gender</td>
+                            <td><span class="badge bg-primary">@actor.MovieActors.Count</span></td>
+                            <td class="text-truncate" style="max-width: 200px;">@actor.Bio</td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@actor.Id" class="btn btn-sm btn-outline-info btn-action">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@actor.Id" class="btn btn-sm btn-outline-primary btn-action">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-action" data-delete-url="@Url.Action("Delete", "Actor", new { id = actor.Id })" >
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>   

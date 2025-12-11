@@ -1,0 +1,225 @@
+﻿@model MovieListVM
+
+@{
+    ViewData["Title"] = "Movies List";
+}
+
+<!-- Breadcrumb Area -->
+<div class="bg-body-tertiary border-bottom py-3">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")" class="text-decoration-none text-primary">
+                        <i class="bi bi-house-door"></i> Home
+                    </a>
+                </li>
+                @if (Model.CinemaId.HasValue)
+                {
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Cinemas", "Home")" class="text-decoration-none text-primary">Cinemas</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.CinemaName</li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item active" aria-current="page">Movies</li>
+                }
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Header & Filters Section -->
+<section class="py-5 bg-body">
+    <div class="container">
+        <div class="row align-items-center mb-4">
+            <div class="col-md-6">
+                <h2 class="fw-bold mb-1 display-6">
+                    <i class="bi bi-film text-primary me-2"></i>
+                    @(Model.CinemaId.HasValue ? $"Showing at {Model.CinemaName}" : "Now Showing")
+                </h2>
+                <p class="text-muted">Browse movies, filter by genre, and book your tickets.</p>
+            </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="card shadow-sm border-0 mb-5 bg-body-tertiary rounded-4">
+            <div class="card-body p-4">
+                <form method="get" asp-controller="Home" asp-action="MovieList" id="filterForm">
+                    
+                    <!-- Hidden input to keep Cinema context -->
+                    @if (Model.CinemaId.HasValue)
+                    {
+                        <input type="hidden" name="cinemaId" value="@Model.CinemaId" />
+                    }
+
+                    <div class="row g-3">
+                        <!-- Search Box -->
+                        <div class="col-lg-4 col-md-6">
+                            <label class="form-label small text-muted fw-bold">SEARCH</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body border-end-0">
+                                    <i class="bi bi-search text-primary"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0 ps-0" 
+                                       name="searchTerm" value="@Model.SearchTerm" 
+                                       placeholder="Movie title...">
+                            </div>
+                        </div>
+
+                        <!-- Genre Filter -->
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label small text-muted fw-bold">GENRE</label>
+                            <select class="form-select cursor-pointer" name="genreId" asp-items="Model.Genres" onchange="submitForm()">
+                                <option value="">All Genres</option>
+                            </select>
+                        </div>
+
+                        <!-- Language Filter -->
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label small text-muted fw-bold">LANGUAGE</label>
+                            <select class="form-select cursor-pointer" name="language" asp-items="Model.Languages" onchange="submitForm()">
+                                <option value="">All Languages</option>
+                            </select>
+                        </div>
+
+                        <!-- Date Filter -->
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label small text-muted fw-bold">DATE</label>
+                            <input type="date" class="form-control cursor-pointer" 
+                                   name="filterDate" value="@Model.FilterDate?.ToString("yyyy-MM-dd")" onchange="submitForm()">
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="col-lg-2 col-md-12 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">
+                                <i class="bi bi-funnel-fill me-1"></i> Filter
+                            </button>
+                            <a href="@Url.Action("MovieList", "Home", new { cinemaId = Model.CinemaId })" 
+                               class="btn btn-outline-secondary w-50" title="Reset Filters">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Movies Count & Results -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">
+                <i class="bi bi-check-circle-fill me-1"></i> @Model.Movies.Count() Movies Found
+            </span>
+        </div>
+
+        <div class="row g-4" id="moviesGrid">
+            @if (Model.Movies.Any())
+            {
+                foreach (var movie in Model.Movies)
+                {
+                    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                        <!-- Movie Card -->
+                        <a href="@Url.Action("Details", "Movie", new { id = movie.Id })" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm movie-hover-card bg-body">
+                                <div class="position-relative overflow-hidden rounded-3">
+                                    <img src="@(string.IsNullOrEmpty(movie.PosterUrl) ? "https://via.placeholder.com/300x450" : movie.PosterUrl)" 
+                                         class="card-img-top object-fit-cover" alt="@movie.Title" style="height: 320px;">
+                                    
+                                    <!-- Badges -->
+                                    <div class="position-absolute top-0 end-0 p-2">
+                                        <span class="badge bg-warning text-dark shadow-sm">
+                                            <i class="bi bi-star-fill small"></i> @(movie.AverageRating?.ToString("0.0") ?? "N/A")
+                                        </span>
+                                    </div>
+                                    <div class="position-absolute bottom-0 start-0 w-100 p-2 movie-gradient-overlay">
+                                        @if(movie.Shows.Any(s => s.StartTime >= DateTime.Now))
+                                        {
+                                            <span class="badge bg-success shadow-sm">Now Showing</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info shadow-sm">Coming Soon</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="card-body p-3">
+                                    <h6 class="card-title fw-bold text-truncate mb-1 text-body" title="@movie.Title">@movie.Title</h6>
+                                    <p class="card-text small text-muted mb-2 text-truncate">
+                                        @(movie.MovieGenres.Any() ? string.Join(", ", movie.MovieGenres.Select(mg => mg.Genre.Name).Take(2)) : "General")
+                                    </p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mt-2 border-top pt-2">
+                                        <small class="text-danger fw-semibold">
+                                            <i class="bi bi-clock"></i> @movie.DurationInMinutes m
+                                        </small>
+                                        <small class="text-body-secondary text-uppercase" style="font-size: 0.75rem;">
+                                            @movie.Language
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-film display-1 text-muted opacity-25"></i>
+                    </div>
+                    <h3 class="fw-bold text-body">No movies found</h3>
+                    <p class="text-muted">We couldn't find any movies matching your filters.</p>
+                    <a href="@Url.Action("MovieList", "Home", new { cinemaId = Model.CinemaId })" class="btn btn-primary rounded-pill px-4 mt-2">
+                        Clear All Filters
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // دالة لإرسال الفورم عند تغيير القوائم المنسدلة فقط
+        function submitForm() {
+            document.getElementById('filterForm').submit();
+        }
+    </script>
+
+    <style>
+        /* CSS مخصص للتفاعل مع الثيم */
+        
+        .movie-hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .movie-hover-card:hover {
+            transform: translateY(-8px);
+            /* تأثير ظل يختلف حسب الثيم */
+            box-shadow: var(--bs-box-shadow-lg) !important;
+        }
+
+        /* تدرج لوني خفيف فوق الصورة لضمان وضوح الـ Badge */
+        .movie-gradient-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+        }
+
+        /* تحسين شكل حقول الإدخال */
+        .form-control:focus, .form-select:focus {
+            box-shadow: none;
+            border-color: var(--bs-primary);
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        /* ضمان تناسق الصور */
+        .object-fit-cover {
+            object-fit: cover;
+        }
+    </style>
+}

@@ -1,0 +1,112 @@
+@model IEnumerable<Genre>
+@{
+
+    ViewData["Title"] = "Genres";
+
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-tags me-2"></i>Genres</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGenreModal">
+        <i class="bi bi-plus-lg me-1"></i>Add Genre
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Movies</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var genre in Model)
+                    {
+                        <tr>
+                            <td>@genre.Id</td>
+                            <td><span class="badge bg-primary fs-6">@genre.Name</span></td>
+                            <td>@genre.MovieGenres.Count</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#editGenreModal" data-id="@genre.Id" data-name="@genre.Name">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-action" data-delete-url="@Url.Action("Delete", "Genre", new { id = genre.Id })" data-delete-name="@genre.Name">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createGenreModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Create" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Create Genre</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="createName" name="Name" placeholder="Genre Name" required>
+                        <label for="createName">Genre Name *</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editGenreModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" id="editId" name="Id">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Genre</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="editName" name="Name" placeholder="Genre Name" required>
+                        <label for="editName">Genre Name *</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('editGenreModal').addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    const id = button.getAttribute('data-id');
+    const name = button.getAttribute('data-name');
+    
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = name;
+});
+</script>
+}

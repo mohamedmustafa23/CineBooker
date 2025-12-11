@@ -1,0 +1,132 @@
+﻿@model IEnumerable<UserListVM>
+@{
+    ViewData["Title"] = "Users Management";
+    var roles = ViewData["Roles"] as List<string>;
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-3">
+    <h1><i class="bi bi-people me-2"></i>Users</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill me-1"></i> Create New User
+    </a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search" placeholder="Search by Name or Email..." value="@ViewData["CurrentSearch"]">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="role">
+                    <option value="All">All Roles</option>
+                    @foreach (var r in roles)
+                    {
+                        <option value="@r" selected="@(ViewData["CurrentRole"]?.ToString() == r)">@r</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-dark w-100"><i class="bi bi-filter"></i> Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Date of Birth</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        var rowClass = user.IsLocked ? "table-danger" : "";
+                        <tr class="@rowClass">
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center">
+                                    <img src="@user.PhotoUrl" class="rounded-circle me-3" width="40" height="40" alt="Avatar">
+                                    <div>
+                                        <div class="fw-bold">@user.FullName</div>
+                                        <small class="text-muted">@user.Email</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @{
+                                    var badgeColor = user.Role switch
+                                    {
+                                        UserRole.SUPER_ADMIN_ROLE => "bg-danger",
+                                        UserRole.ADMIN_ROLE => "bg-warning text-dark",
+                                        UserRole.EMPLOYEE_ROLE => "bg-info text-dark",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @badgeColor">@user.Role</span>
+                            </td>
+                            <td>
+                                @if (user.IsLocked)
+                                {
+                                    <span class="badge bg-danger"><i class="bi bi-lock-fill"></i> Locked</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Active</span>
+                                }
+                            </td>
+                            <td>@(user.DateOfBirth?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                            <td>
+                                @if (user.Role == UserRole.SUPER_ADMIN_ROLE)
+                                {
+                                    @if(User.IsInRole(UserRole.SUPER_ADMIN_ROLE))
+                                    {
+                                        <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    }
+                                    <span class="badge bg-secondary" title="Super Admin cannot be blocked">
+                                        <i class="bi bi-shield-lock-fill"></i> Protected
+                                    </span>
+                                }
+                                else
+                                {
+                                    <form asp-action="LockUnlock" asp-route-id="@user.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to @(user.IsLocked ? "Unlock" : "Block") this user?');">
+                                        @if (user.IsLocked)
+                                        {
+                                            <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button type="submit" class="btn btn-sm btn-success" title="Unlock User">
+                                                <i class="bi bi-unlock-fill"></i> Unlock
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary" title="Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Block User">
+                                                <i class="bi bi-lock-fill"></i> Block
+                                            </button>
+                                        }
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

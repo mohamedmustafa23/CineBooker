@@ -1,0 +1,388 @@
+﻿@model DashboardVM
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+    <div>
+        <button class="btn btn-outline-secondary me-2" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Print Report
+        </button>
+    </div>
+</div>
+
+<!-- Top Stats Cards -->
+<div class="row g-4 mb-4">
+    <!-- Movies -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">@Model.TotalMovies</div>
+                    <div class="stat-label">Total Movies</div>
+                    <div class="stat-change @(Model.MoviesGrowth >= 0 ? "text-success" : "text-danger")">
+                        <i class="bi bi-arrow-@(Model.MoviesGrowth >= 0 ? "up" : "down")"></i> @Math.Abs(Model.MoviesGrowth)% from last month
+                    </div>
+                </div>
+                <div class="stat-icon bg-primary-soft">
+                    <i class="bi bi-camera-reels"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">@Model.TotalBookings</div>
+                    <div class="stat-label">Total Bookings</div>
+                    <div class="stat-change @(Model.BookingsGrowth >= 0 ? "text-success" : "text-danger")">
+                        <i class="bi bi-arrow-@(Model.BookingsGrowth >= 0 ? "up" : "down")"></i> @Math.Abs(Model.BookingsGrowth)% from last month
+                    </div>
+                </div>
+                <div class="stat-icon bg-success-soft">
+                    <i class="bi bi-ticket-perforated"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">@Model.TotalRevenue.ToString("C0")</div>
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-change @(Model.RevenueGrowth >= 0 ? "text-success" : "text-danger")">
+                        <i class="bi bi-arrow-@(Model.RevenueGrowth >= 0 ? "up" : "down")"></i> @Math.Abs(Model.RevenueGrowth)% from last month
+                    </div>
+                </div>
+                <div class="stat-icon bg-warning-soft">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cinemas -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">@Model.TotalCinemas / @Model.TotalHalls</div>
+                    <div class="stat-label">Cinemas / Halls</div>
+                    <div class="stat-change text-info">
+                        <i class="bi bi-building"></i> Active
+                    </div>
+                </div>
+                <div class="stat-icon bg-info-soft">
+                    <i class="bi bi-building"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-graph-up me-2"></i>Daily Bookings (Last 7 Days)</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="bookingsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-pie-chart me-2"></i>Seat Occupancy (Active Shows)
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="occupancyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tables Section -->
+<div class="row g-4 mb-4">
+    <!-- Top Movies -->
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-star me-2"></i>Top Movies by Revenue</span>
+                <a href="/Admin/Movie" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Movie</th>
+                                <th>Rating</th>
+                                <th>Bookings</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TopMovies.Any())
+                            {
+                                foreach (var movie in Model.TopMovies)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="@(string.IsNullOrEmpty(movie.PosterUrl) ? "https://via.placeholder.com/40x60" : movie.PosterUrl)"
+                                                     class="rounded me-2" style="width:40px; height:60px; object-fit:cover;" alt="Poster">
+                                                <span class="fw-semibold">@movie.Title</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="text-warning"><i class="bi bi-star-fill"></i></span> @movie.Rating.ToString("0.0")
+                                        </td>
+                                        <td>@movie.BookingsCount</td>
+                                        <td class="text-success">@movie.Revenue.ToString("C0")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-3">No data available</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Bookings -->
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>Latest Bookings</span>
+                <a href="/Admin/Booking" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Movie</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentBookings.Any())
+                            {
+                                foreach (var item in Model.RecentBookings)
+                                {
+                                    <tr>
+                                        <td><a href="/Admin/Booking/Details/@item.Id">#@item.Id</a></td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; font-size: 0.7rem;">
+                                                    @item.User?.UserName?.Substring(0, 1).ToUpper()
+                                                </div>
+                                                <span>@item.User?.UserName</span>
+                                            </div>
+                                        </td>
+                                        <td>@item.Show?.Movie?.Title</td>
+                                        <td>@item.Amount.ToString("C0")</td>
+                                        <td>
+                                            @if (item.StatusOfPayment == PaymentStatus.Approved)
+                                            {
+                                                <span class="badge bg-success">Paid</span>
+                                            }
+                                            else if (item.StatusOfPayment == PaymentStatus.Pending)
+                                            {
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">@item.StatusOfPayment</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-3">No bookings yet</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row -->
+<div class="row g-4">
+    <!-- User Stats -->
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-people me-2"></i>Users Overview</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-primary-soft me-3" style="width: 40px; height: 40px; font-size: 1rem;"><i class="bi bi-shield-check"></i></div>
+                        <div><div class="fw-semibold">Administrators</div></div>
+                    </div>
+                    <span class="badge bg-primary">@Model.AdminCount</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-info-soft me-3" style="width: 40px; height: 40px; font-size: 1rem;"><i class="bi bi-person"></i></div>
+                        <div><div class="fw-semibold">Customers</div></div>
+                    </div>
+                    <span class="badge bg-info">@Model.CustomerCount</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Shows -->
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-calendar-check me-2"></i>Today's Shows</div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @if (Model.TodaysShows.Any())
+                    {
+                        foreach (var show in Model.TodaysShows)
+                        {
+                            string badgeClass = show.OccupancyPercentage > 80 ? "bg-success" :
+                            show.OccupancyPercentage > 50 ? "bg-warning text-dark" : "bg-info";
+
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
+                                <div>
+                                    <div class="fw-semibold">@show.MovieTitle</div>
+                                    <small class="text-muted">@show.HallName - @show.Time.ToString("hh:mm tt")</small>
+                                </div>
+                                <span class="badge @badgeClass">@show.OccupancyPercentage% Full</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-3 text-center text-muted">No shows scheduled for today</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-activity me-2"></i>Quick Stats</div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Active Movies</span>
+                        <span class="fw-semibold">@Model.ActiveMoviesCount / @Model.TotalMovies</span>
+                    </div>
+                    @{
+                        double activePercent = Model.TotalMovies > 0 ? (double)Model.ActiveMoviesCount / Model.TotalMovies * 100 : 0;
+                    }
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: @activePercent%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Seats Sold Today</span>
+                        <span class="fw-semibold">@Model.SeatsSoldToday</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-primary" style="width: 50%"></div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ========== 1. Daily Bookings Chart ==========
+            const bookingsCtx = document.getElementById('bookingsChart').getContext('2d');
+
+            const bookingLabels = @Html.Raw(Json.Serialize(Model.ChartLabels));
+            const bookingData = @Html.Raw(Json.Serialize(Model.ChartValues));
+
+            new Chart(bookingsCtx, {
+                type: 'line',
+                data: {
+                    labels: bookingLabels,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: bookingData,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // ========== 2. Occupancy Chart ==========
+            const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+            const booked = @Model.SeatsBooked;
+            const available = @Model.SeatsAvailable;
+            const locked = @Model.SeatsLocked;
+
+            const dataValues = (booked + available + locked) === 0 ? [0, 100, 0] : [booked, available, locked];
+
+            new Chart(occupancyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Booked', 'Available', 'Locked'],
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: ['#10b981', '#e5e7eb', '#f59e0b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    cutout: '70%'
+                }
+            });
+        });
+    </script>
+}

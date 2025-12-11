@@ -1,0 +1,49 @@
+@model IEnumerable<Address>
+@{
+    ViewData["Title"] = "Addresses";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-person-video3 me-2"></i>Addresses</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Address
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>City</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var address in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@address.PhotoUrl" class="rounded-circle" height="50" width="50">
+                            </td>
+                            <td class="fw-semibold">@address.City</td>
+                            <td class="text-end">
+                                <a asp-controller="Address" asp-action="Details" asp-route-id="@address.Id" class="btn btn-sm btn-outline-info btn-action">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a asp-controller="Address" asp-action="Edit" asp-route-id="@address.Id" class="btn btn-sm btn-outline-primary btn-action">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-action" data-delete-url="@Url.Action("Delete", "Address", new { id = address.Id })" data-delete-name="@address.City">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

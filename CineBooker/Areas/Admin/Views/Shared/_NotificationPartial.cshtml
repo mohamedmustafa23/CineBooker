@@ -1,0 +1,24 @@
+﻿@if (TempData["Success"] != null)
+{
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+        toastr.success('@TempData["Success"]');
+    </script>
+}
+else if (TempData["Error"] != null)
+{
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "3000"
+        };
+        toastr.error('@TempData["Error"]');
+    </script>
+}

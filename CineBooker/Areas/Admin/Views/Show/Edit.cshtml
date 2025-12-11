@@ -1,0 +1,159 @@
+﻿@model ShowEditVM
+@{
+
+    ViewData["Title"] = "Edit Show";
+
+
+
+
+    var initialEndTime = Model.ShowDate.Date.Add(Model.StartTime).AddMinutes(Model.MovieDuration).ToString("HH:mm");
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-pencil-square me-2"></i>Edit Show</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Edit" method="post" class="needs-validation" novalidate>
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="MovieDuration" id="MovieDuration" />
+    <input type="hidden" asp-for="Id" />
+
+    <div class="row">
+        <!-- Left Column: Form -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-film me-2"></i>Show Information
+                </div>
+                <div class="card-body">
+
+                    @if (Model.BookedCount > 0)
+                    {
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            This show has <strong>@Model.BookedCount booked seats</strong>. Movie and Hall details are locked.
+                        </div>
+                    }
+
+                    <!-- Read-Only Fields -->
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" value="@Model.MovieTitle (@Model.MovieDuration min)" disabled readonly>
+                        <label>Movie (Cannot be changed)</label>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" value="@Model.CinemaName" disabled readonly>
+                                <label>Cinema (Cannot be changed)</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" value="@Model.HallName" disabled readonly>
+                                <label>Cinema Hall (Cannot be changed)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Editable Fields -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input asp-for="ShowDate" type="date" class="form-control" required>
+                                <label asp-for="ShowDate">Date *</label>
+                                <span asp-validation-for="ShowDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input asp-for="StartTime" type="time" class="form-control" id="StartTime" required onchange="calculateEndTime()">
+                                <label asp-for="StartTime">Start Time *</label>
+                                <span asp-validation-for="StartTime" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="time" class="form-control" id="EndTime" value="@initialEndTime" readonly>
+                                <label>End Time (Calculated)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="BasePrice" class="form-control" type="number" step="1" min="1" required>
+                        <label asp-for="BasePrice">Ticket Price (Integer) *</label>
+                        <span asp-validation-for="BasePrice" class="text-danger"></span>
+                        <div class="form-text">Changing price will only affect unbooked seats.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        </div>
+
+        <!-- Right Column: Stats -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-bar-chart me-2"></i>Show Statistics
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Total Capacity</span>
+                        <span class="fw-bold">@Model.TotalSeats</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Booked Seats</span>
+                        <span class="fw-bold text-success">@Model.BookedCount</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Available</span>
+                        <span class="fw-bold text-info">@(Model.TotalSeats - Model.BookedCount)</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Realized Revenue</span>
+                        <span class="fw-bold text-success">@Model.TotalRevenue.ToString("C0")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Save Changes
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function calculateEndTime() {
+            const startTimeVal = document.getElementById('StartTime').value;
+            const duration = parseInt(document.getElementById('MovieDuration').value) || 0;
+
+            if (startTimeVal && duration) {
+                const [hours, minutes] = startTimeVal.split(':').map(Number);
+                let totalMinutes = hours * 60 + minutes + duration;
+
+                let endHours = Math.floor(totalMinutes / 60) % 24;
+                let endMinutes = totalMinutes % 60;
+
+                const endTimeStr =
+                    String(endHours).padStart(2, '0') + ':' +
+                    String(endMinutes).padStart(2, '0');
+
+                document.getElementById('EndTime').value = endTimeStr;
+            }
+        }
+    </script>
+}

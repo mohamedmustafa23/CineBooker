@@ -1,0 +1,110 @@
+﻿@model CineBooker.ViewModels.HomeVM
+@{
+    ViewData["Title"] = "Explore";
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content text-center">
+        <h1 class="display-3 fw-bold mb-3">
+            Book Your <span class="text-primary">Experience</span>
+        </h1>
+        <p class="lead mb-5 opacity-75">Discover movies, explore theaters, and book tickets instantly.</p>
+
+        <!-- Search Bar -->
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="input-group input-group-lg shadow-lg">
+                    <span class="input-group-text bg-body border-0 ps-4">
+                        <i class="bi bi-search text-primary"></i>
+                    </span>
+                    <input type="text" class="form-control border-0 py-3"
+                           id="citySearch"
+                           placeholder="Search for a city (e.g. Cairo, Alex)..."
+                           onkeyup="filterCities()">
+                    <button class="btn btn-primary px-4 fw-bold" onclick="scrollToCities()">Explore</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Cities Section -->
+<section class="py-5" id="citiesSection">
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Browse by City</h3>
+                <p class="text-muted mb-0">Find theaters in your location</p>
+            </div>
+            <span class="badge bg-primary rounded-pill px-3 py-2 fs-6" id="cityCount">@Model.Cities.Count() Cities</span>
+        </div>
+
+        <div class="row g-4" id="citiesGrid">
+            @if (Model.Cities.Any())
+            {
+                foreach (var city in Model.Cities)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6 city-card" data-city="@city.Name.ToLower()">
+                        <a href="@Url.Action("Cinemas", "Home", new { city = city.Name })" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-img-overlay-wrapper" style="height: 250px;">
+                                    <img src="@city.ImageUrl" class="card-img-top w-100 h-100 object-fit-cover" alt="@city.Name">
+
+                                    <div class="city-overlay-gradient">
+                                        <h4 class="fw-bold mb-1 text-white">@city.Name</h4>
+                                        <small class="text-white-50">
+                                            <i class="bi bi-geo-alt-fill text-primary"></i> @city.CinemaCount Cinemas
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5">
+                    <div class="display-1 text-muted mb-3"><i class="bi bi-building-slash"></i></div>
+                    <h4>No cities available</h4>
+                </div>
+            }
+        </div>
+
+        <div id="noResults" class="text-center py-5 d-none">
+            <h5 class="text-muted">No cities match your search.</h5>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function filterCities() {
+            let input = document.getElementById('citySearch').value.toLowerCase();
+            let cards = document.querySelectorAll('.city-card');
+            let noResults = document.getElementById('noResults');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                let cityName = card.getAttribute('data-city');
+                if (cityName.includes(input)) {
+                    card.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    card.classList.add('d-none');
+                }
+            });
+
+            document.getElementById('cityCount').textContent = visibleCount + ' Cities';
+
+            if (visibleCount === 0) noResults.classList.remove('d-none');
+            else noResults.classList.add('d-none');
+        }
+
+        function scrollToCities() {
+            document.getElementById('citiesSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+}

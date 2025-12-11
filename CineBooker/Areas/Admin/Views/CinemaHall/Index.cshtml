@@ -1,0 +1,142 @@
+﻿@model IEnumerable<CinemaHall>
+@{
+    ViewData["Title"] = "Cinema Halls";
+}
+<div class="page-header">
+    <h1><i class="bi bi-door-open me-2"></i>Cinema Halls</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Hall
+    </a>
+</div>
+
+<div class="filter-card card mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <select class="form-select" id="filterCinema" name="cinemaId" asp-items="ViewBag.CinemasList" onchange="this.form.submit()">
+                        <option value="">All Cinemas</option>
+                    </select>
+                    <label for="filterCinema">Cinema</label>
+                </div>
+            </div>
+            <div class="col-md-5 d-flex align-items-center gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 data-table">
+                <thead class="">
+                    <tr>
+                        <th>Hall Name</th>
+                        <th>Cinema</th>
+                        <th>Capacity</th>
+                        <th>Configuration</th>
+                        <th>Today's Shows</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var hall in Model)
+                        {
+                            var seatCount = hall.Seats?.Count ?? 0;
+
+                            var maxRow = hall.Seats?.Any() == true ? hall.Seats.Max(s => s.SeatRow) : 0;
+                            var maxCol = hall.Seats?.Any() == true ? hall.Seats.Max(s => s.SeatCol) : 0;
+
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@hall.Name</div>
+                                </td>
+                                <td>
+                                    <span class="text-primary">@hall.Cinema?.Name</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">@seatCount</span> seats
+                                </td>
+                                <td>
+                                    @if (maxRow > 0 && maxCol > 0)
+                                    {
+                                        <span class="badge bg-light text-dark border">
+                                            @maxRow rows x @maxCol cols
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Not Configured</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-25 text-secondary">0 shows</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a asp-action="Details" asp-route-id="@hall.Id" class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@hall.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="/Admin/Seat?hallId=@hall.Id" class="btn btn-sm btn-outline-secondary" title="Manage Seats">
+                                            <i class="bi bi-grid-3x3"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="confirmDelete(@hall.Id, '@hall.Name')"
+                                                title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <form id="delete-form-@hall.Id" asp-action="Delete" asp-route-id="@hall.Id" method="post" style="display:none"></form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-door-closed display-4 d-block mb-3"></i>
+                                No halls found. Try changing the filters or add a new hall.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Delete Hall?',
+                text: `Are you sure you want to delete "${name}"? All seats in this hall will also be deleted.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`delete-form-${id}`).submit();
+                }
+            });
+        }
+    </script>
+}

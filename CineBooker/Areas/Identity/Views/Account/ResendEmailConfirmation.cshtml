@@ -1,0 +1,109 @@
+﻿@model CineBooker.ViewModels.ResendEmailConfirmationVM
+@{
+    ViewData["Title"] = "Resend Email Confirmation";
+}
+
+<div class="container_email_confirmation">
+    <div class="email-confirmation-card">
+        <div class="card-icon">
+            <i class="fas fa-envelope-open-text"></i>
+        </div>
+
+        <h1>Email Verification</h1>
+        <p class="subtitle">Didn't receive the confirmation email? Enter your email address and we'll send you a new one.</p>
+
+        <form asp-action="ResendEmailConfirmation" asp-controller="Account" method="post">
+            <div class="form-content">
+                <div class="input-group">
+                    <label asp-for="UserNameOREmail">
+                        <i class="fas fa-envelope"></i>
+                        Email Address
+                    </label>
+                    <input type="email"
+                           asp-for="UserNameOREmail"
+                           placeholder="Enter your email address"
+                           autocomplete="email"
+                           required />
+                    <span asp-validation-for="UserNameOREmail" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                    Resend Confirmation Email
+                </button>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <a asp-action="Login" asp-controller="Account" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Sign In
+                </a>
+            </div>
+        </form>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                @TempData["ErrorMessage"]
+            </div>
+        }
+    </div>
+
+    <div class="info-panel">
+        <div class="info-content">
+            <h2>Why verify your email?</h2>
+            <ul class="benefits-list">
+                <li>
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <strong>Security</strong>
+                        <p>Protect your account from unauthorized access</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-bell"></i>
+                    <div>
+                        <strong>Notifications</strong>
+                        <p>Get updates about your bookings and offers</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-lock"></i>
+                    <div>
+                        <strong>Recovery</strong>
+                        <p>Easy password reset if you forget it</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-hide alerts after 5 seconds
+            const alerts = document.querySelectorAll('.email-confirmation-card .alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }, 5000);
+            });
+        });
+    </script>
+}

@@ -1,0 +1,66 @@
+@model dynamic
+
+@{
+    string inputId = Model.Id ?? Guid.NewGuid().ToString();
+    string inputName = Model.Name ?? inputId;
+    string inputType = Model.Type ?? "text";
+    string inputLabel = Model.Label ?? "";
+    string inputValue = Model.Value ?? "";
+    string inputPlaceholder = Model.Placeholder ?? inputLabel;
+    bool isRequired = Model.Required ?? false;
+    string validationMessage = Model.ValidationMessage ?? $"{inputLabel} is required";
+    string cssClass = Model.CssClass ?? "";
+    bool isTextarea = inputType == "textarea";
+    bool isSelect = inputType == "select";
+    IEnumerable<SelectListItem> selectItems = Model.SelectItems ?? new List<SelectListItem>();
+}
+
+<div class="form-floating mb-3 @cssClass">
+    @if (isTextarea)
+    {
+        <textarea class="form-control" 
+                  id="@inputId" 
+                  name="@inputName" 
+                  placeholder="@inputPlaceholder"
+                  style="height: 120px"
+                  @(isRequired ? "required" : "")>@inputValue</textarea>
+    }
+    else if (isSelect)
+    {
+        <select class="form-select" 
+                id="@inputId" 
+                name="@inputName"
+                @(isRequired ? "required" : "")>
+            <option value="">Select @inputLabel</option>
+            @foreach (var item in selectItems)
+            {
+                var selectedAttr = item.Selected ? "selected" : "";
+                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            }
+        </select>
+    }
+    else if (inputType == "file")
+    {
+        <input type="file" 
+               class="form-control" 
+               id="@inputId" 
+               name="@inputName"
+               accept="@(Model.Accept ?? "image/*")"
+               @(isRequired ? "required" : "")>
+    }
+    else
+    {
+        <input type="@inputType" 
+               class="form-control" 
+               id="@inputId" 
+               name="@inputName" 
+               value="@inputValue"
+               placeholder="@inputPlaceholder"
+               @(isRequired ? "required" : "")>
+    }
+    <label for="@inputId">@inputLabel</label>
+    @if (isRequired)
+    {
+        <div class="invalid-feedback">@validationMessage</div>
+    }
+</div>

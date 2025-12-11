@@ -1,0 +1,257 @@
+﻿@using CineBooker.Enums
+@model CineBooker.ViewModels.BookingIndexVM
+
+@{
+    ViewData["Title"] = "Bookings";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header">
+    <h1><i class="bi bi-ticket-perforated me-2"></i>Bookings</h1>
+    <button class="btn btn-outline-primary" onclick="window.print()">
+        <i class="bi bi-printer me-1"></i>Export Report
+    </button>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-card">
+    <form method="get" class="row g-3">
+        <div class="col-md-2">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="searchBooking" asp-for="Search" placeholder="Booking ID...">
+                <label for="searchBooking">Search (ID/User)</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-floating">
+                <select class="form-select" id="filterMovie" asp-for="MovieId" asp-items="Model.MovieList">
+                    <option value="">All Movies</option>
+                </select>
+                <label for="filterMovie">Movie</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-floating">
+                <input type="date" class="form-control" id="filterDate" asp-for="Date">
+                <label for="filterDate">Date</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-floating">
+                <select class="form-select" id="filterStatus" asp-for="Status" asp-items="Html.GetEnumSelectList<PaymentStatus>()">
+                    <option value="">All Status</option>
+                </select>
+                <label for="filterStatus">Payment Status</label>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-center gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search me-1"></i>Filter
+            </button>
+            <a href="/Admin/Booking" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">@Model.TotalBookings</div>
+                    <div class="stat-label">Total Bookings</div>
+                </div>
+                <div class="stat-icon bg-primary-soft">
+                    <i class="bi bi-ticket-perforated"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value text-success">@Model.TotalRevenue.ToString("C0")</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+                <div class="stat-icon bg-success-soft">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value text-warning">@Model.PendingCount</div>
+                    <div class="stat-label">Pending Payments</div>
+                </div>
+                <div class="stat-icon bg-warning-soft">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value text-danger">@Model.CancelledCount</div>
+                    <div class="stat-label">Cancelled/Rejected</div>
+                </div>
+                <div class="stat-icon bg-danger-soft">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bookings Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>User</th>
+                        <th>Movie / Show</th>
+                        <th>Seats</th>
+                        <th>Amount</th>
+                        <th>Booked Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Bookings != null && Model.Bookings.Any())
+                    {
+                        foreach (var item in Model.Bookings)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="fw-semibold text-decoration-none">
+                                        #@item.Id
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                                             style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            @item.User?.UserName?.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <div>@item.User?.UserName</div>
+                                            <small class="text-muted" style="font-size: 0.75rem;">@item.User?.Email</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@item.Show?.Movie?.Title</div>
+                                    <small class="text-muted">
+                                        @item.Show?.StartTime.ToString("MMM dd, hh:mm tt") - @item.Show?.CinemaHall?.Name
+                                    </small>
+                                </td>
+                                <td>
+                                    <div style="max-width: 150px; overflow-wrap: break-word;">
+                                        @foreach (var bs in item.BookingSeats)
+                                        {
+                                            char rowChar = (char)(bs.ShowSeat.Seat.SeatRow + 64);
+                                            <span class="badge bg-light text-dark border me-1 mb-1">
+                                                @rowChar@bs.ShowSeat.Seat.SeatCol
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="fw-semibold">@item.Amount.ToString("C0")</td>
+                                <td>
+                                    <div>@item.BookedDate.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">@item.BookedDate.ToString("hh:mm tt")</small>
+                                </td>
+                                <td>
+                                    @if (item.StatusOfPayment == PaymentStatus.Approved)
+                                    {
+                                        <span class="badge bg-success">Paid</span>
+                                    }
+                                    else if (item.StatusOfPayment == PaymentStatus.Pending)
+                                    {
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@item.StatusOfPayment</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        @if (item.StatusOfPayment == PaymentStatus.Pending)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                    onclick="confirmAction('ApprovePayment', @item.Id, 'Mark this booking as Paid?')"
+                                                    title="Approve Payment">
+                                                <i class="bi bi-check-circle"></i>
+                                            </button>
+                                        }
+
+                                        @if (item.StatusOfPayment != PaymentStatus.Rejected)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="confirmAction('CancelBooking', @item.Id, 'Cancel this booking? Seats will be released.')"
+                                                    title="Cancel Booking">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        }
+                                    </div>
+
+                                    <!-- Hidden Forms for Actions -->
+                                    <form id="form-ApprovePayment-@item.Id" asp-action="ApprovePayment" asp-route-id="@item.Id" method="post" style="display:none"></form>
+                                    <form id="form-CancelBooking-@item.Id" asp-action="CancelBooking" asp-route-id="@item.Id" method="post" style="display:none"></form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                                No bookings found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmAction(action, id, message) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: action === 'CancelBooking' ? '#d33' : '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, proceed!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`form-${action}-${id}`).submit();
+                }
+            });
+        }
+    </script>
+}

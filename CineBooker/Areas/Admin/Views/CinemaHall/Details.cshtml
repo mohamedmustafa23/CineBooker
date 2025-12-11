@@ -1,0 +1,165 @@
+﻿@model CinemaHall
+@{
+    ViewData["Title"] = "Cinema Hall Details";
+
+    var totalSeats = Model.Seats?.Count ?? 0;
+    var maxRows = Model.Seats?.Any() == true ? Model.Seats.Max(s => s.SeatRow) : 0;
+    var maxCols = Model.Seats?.Any() == true ? Model.Seats.Max(s => s.SeatCol) : 0;
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-door-open me-2"></i>Hall Details</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column: Info & Stats -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3 class="mb-1">@Model.Name</h3>
+                <p class="text-muted mb-4">@Model.Cinema?.Name</p>
+
+                <div class="row text-center mb-4">
+                    <div class="col-4 border-end">
+                        <div class="fs-3 fw-bold text-primary">@maxRows</div>
+                        <small class="text-muted">Rows</small>
+                    </div>
+                    <div class="col-4 border-end">
+                        <div class="fs-3 fw-bold text-info">@maxCols</div>
+                        <small class="text-muted">Columns</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-3 fw-bold text-success">@totalSeats</div>
+                        <small class="text-muted">Seats</small>
+                    </div>
+                </div>
+
+                <a href="/Admin/Seat/Index?hallId=@Model.Id" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-grid-3x3 me-1"></i>Manage Seats
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-bar-chart me-2"></i>Statistics
+            </div>
+            <div class="card-body">
+                <div class="alert alert-light text-center small text-muted p-2">
+                    Shows & Revenue stats will appear here once bookings are active.
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Today's Shows</span>
+                    <!-- placeholder -->
+                    <span class="fw-bold">0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Today's Bookings</span>
+                    <span class="fw-bold text-success">0</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Today's Revenue</span>
+                    <span class="fw-bold text-success">$0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Layout & Shows -->
+    <div class="col-lg-8">
+        <!-- Seat Layout -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-grid-3x3 me-2"></i>Seat Layout
+            </div>
+            <div class="card-body">
+                <div class="screen mb-3">SCREEN</div>
+
+                <!-- Grid Container: Dynamic Column Count -->
+                <div class="seat-grid" id="seatGrid"
+                     style="grid-template-columns: repeat(@Math.Min(maxCols, 25), 32px); overflow-x: auto; justify-content: center;">
+                </div>
+
+                <div class="d-flex justify-content-center gap-4 mt-3">
+                    <div class="d-flex align-items-center">
+                        <div class="seat available me-2" style="width: 24px; height: 24px;"></div>
+                        <small>Available</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shows List -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar-event me-2"></i>Today's Shows</span>
+                <a href="/Admin/Show/Create?hallId=@Model.Id" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Add Show
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Movie</th>
+                                <th>Occupancy</th>
+                                <th>Revenue</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Placeholder Data -->
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-film d-block fs-3 mb-2"></i>
+                                    No shows scheduled for today.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.getElementById('seatGrid');
+
+            const rows = @maxRows;
+            const cols = @maxCols;
+
+            if(rows === 0 || cols === 0) {
+                grid.innerHTML = '<div class="text-center text-muted w-100 p-3">No seats configured yet.</div>';
+                grid.style.display = 'block'; 
+                return;
+            }
+
+            for (let r = 1; r <= rows; r++) {
+                for (let c = 1; c <= cols; c++) {
+                    const seat = document.createElement('div');
+                    seat.className = 'seat available';
+                    seat.style.fontSize = '0.6rem';
+
+                    seat.textContent = String.fromCharCode(64 + r) + c;
+
+                    seat.title = `Row ${r}, Seat ${c}`;
+
+                    grid.appendChild(seat);
+                }
+            }
+        });
+    </script>
+}

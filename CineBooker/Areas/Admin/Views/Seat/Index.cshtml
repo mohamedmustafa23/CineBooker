@@ -1,0 +1,325 @@
+﻿@model SeatVM
+@{
+    ViewData["Title"] = "Seat Management";
+    var totalSeats = Model.Seats?.Count ?? 0;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header">
+    <h1><i class="bi bi-grid-3x3 me-2"></i>Seat Management</h1>
+    @if (Model.HallId.HasValue)
+    {
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkCreateModal">
+            <i class="bi bi-plus-lg me-1"></i>Bulk Create Seats
+        </button>
+    }
+</div>
+
+<!-- Filter Section -->
+<div class="filter-card card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <select class="form-select" id="filterCinema" asp-for="CinemaId" asp-items="Model.CinemaList" onchange="loadHalls()">
+                        <option value="">Select Cinema</option>
+                    </select>
+                    <label for="filterCinema">Cinema</label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-floating">
+                    <select class="form-select" id="filterHall" asp-for="HallId" asp-items="Model.HallList">
+                        <option value="">Select Hall</option>
+                    </select>
+                    <label for="filterHall">Cinema Hall</label>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-center gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i>Load Seats
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.SelectedHall != null)
+{
+    <div class="row">
+        <!-- Seat Grid -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-grid me-2"></i>@Model.SelectedHall.Name - Seat Layout</span>
+                    <div>
+                        <span class="badge bg-secondary">@totalSeats seats</span>
+                        <span class="badge bg-success">@Model.MaxRows rows x @Model.MaxCols cols</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="screen mb-4">SCREEN</div>
+
+                    <!-- Dynamic Grid -->
+                    <div class="seat-grid" id="seatGrid"
+                         style="grid-template-columns: repeat(@(Math.Min(Model.MaxCols, 25)), 32px); overflow-x: auto; justify-content: center;">
+
+                        @for (int r = 1; r <= Model.MaxRows; r++)
+                        {
+                            for (int c = 1; c <= Model.MaxCols; c++)
+                            {
+                                var seat = Model.Seats.FirstOrDefault(s => s.SeatRow == r && s.SeatCol == c);
+
+                                if (seat != null)
+                                {
+                                    <div class="seat available"
+                                         data-seat-id="@seat.Id"
+                                         data-row="@r"
+                                         data-col="@c"
+                                         title="Row @((char)(r + 64)), Seat @c">
+                                        @((char)(r + 64))@c
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div style="width: 32px; height: 32px;"></div>
+                                }
+                            }
+                        }
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-4 mt-4">
+                        <div class="d-flex align-items-center">
+                            <div class="seat available me-2" style="width: 24px; height: 24px;"></div>
+                            <small>Available</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="seat selected me-2" style="width: 24px; height: 24px;"></div>
+                            <small>Selected</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info & Actions -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>Hall Information
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Cinema</span>
+                        <span class="fw-bold">@Model.SelectedHall.Cinema.Name</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Hall</span>
+                        <span class="fw-bold">@Model.SelectedHall.Name</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Dimensions</span>
+                        <span class="fw-bold">@Model.MaxRows x @Model.MaxCols</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Seats</span>
+                        <span class="fw-bold text-success">@totalSeats</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Delete -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-pencil-square me-2"></i>Bulk Actions
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Select seats on the grid to perform bulk actions.</p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-danger" id="deleteSelected" onclick="deleteSelectedSeats()" disabled>
+                            <i class="bi bi-trash me-1"></i>Delete Selected (0)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Single Seat -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-plus-circle me-2"></i>Add Single Seat
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddSingleSeat" method="post">
+                        <input type="hidden" name="hallId" value="@Model.HallId" />
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <input type="text" name="rowChar" class="form-control" id="newRow" placeholder="Row" maxlength="1" required style="text-transform:uppercase">
+                                    <label for="newRow">Row (A-Z)</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <input type="number" name="col" class="form-control" id="newCol" placeholder="Col" min="1" required>
+                                    <label for="newCol">Column</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-lg me-1"></i>Add Seat
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info text-center mt-4">
+        <i class="bi bi-arrow-up-circle fs-3 d-block mb-2"></i>
+        Please select a Cinema and Hall to manage seats.
+    </div>
+}
+
+<!-- Bulk Create Modal -->
+<div class="modal fade" id="bulkCreateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="BulkCreate" method="post">
+                <input type="hidden" name="hallId" value="@Model.HallId" />
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-grid-3x3 me-2"></i>Bulk Create Seats</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        This will <strong>delete all existing seats</strong> in this hall and create a new layout.
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input type="number" name="rows" class="form-control" id="bulkRows" value="10" min="1" max="30" onchange="updateBulkTotal()">
+                                <label for="bulkRows">Number of Rows</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input type="number" name="cols" class="form-control" id="bulkCols" value="15" min="1" max="40" onchange="updateBulkTotal()">
+                                <label for="bulkCols">Seats per Row</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <span class="text-muted">Total seats to create: </span>
+                        <strong id="bulkTotal">150</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Create Seats
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const seats = document.querySelectorAll('#seatGrid .seat.available');
+
+            if (seats.length === 0) return;
+
+            seats.forEach(seat => {
+                seat.replaceWith(seat.cloneNode(true));
+            });
+
+            const freshSeats = document.querySelectorAll('#seatGrid .seat.available');
+
+            freshSeats.forEach(seat => {
+                seat.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    updateSelectedCount();
+                });
+            });
+
+            const cinemaSelect = document.getElementById("filterCinema");
+            if(cinemaSelect){
+                cinemaSelect.addEventListener('change', loadHalls);
+            }
+
+            updateSelectedCount();
+        });
+
+        function updateSelectedCount() {
+            const selected = document.querySelectorAll('#seatGrid .seat.selected');
+            const btn = document.getElementById('deleteSelected');
+
+            if (btn) {
+                btn.textContent = `Delete Selected (${selected.length})`;
+                btn.disabled = selected.length === 0;
+            }
+        }
+
+        function loadHalls() {
+            var cinemaId = document.getElementById("filterCinema").value;
+            var hallSelect = document.getElementById("filterHall");
+
+            hallSelect.innerHTML = '<option value="">Loading...</option>';
+
+            if (cinemaId) {
+                fetch(`/Admin/Seat/GetHallsByCinema?cinemaId=${cinemaId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        hallSelect.innerHTML = '<option value="">Select Hall</option>';
+                        data.forEach(item => {
+                            var option = document.createElement("option");
+                            option.value = item.id;
+                            option.text = item.name;
+                            hallSelect.appendChild(option);
+                        });
+                    });
+            } else {
+                hallSelect.innerHTML = '<option value="">Select Hall</option>';
+            }
+        }
+
+        function deleteSelectedSeats() {
+            const selected = document.querySelectorAll('#seatGrid .seat.selected');
+            if (selected.length === 0) return;
+
+            if (!confirm(`Are you sure you want to delete ${selected.length} seats?`)) return;
+
+            const ids = Array.from(selected).map(s => parseInt(s.getAttribute('data-seat-id')));
+
+            fetch('/Admin/Seat/DeleteSeats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(err => alert('Error connecting to server'));
+        }
+
+        function updateBulkTotal() {
+            const rows = document.getElementById('bulkRows');
+            const cols = document.getElementById('bulkCols');
+            if(rows && cols) {
+                document.getElementById('bulkTotal').textContent = rows.value * cols.value;
+            }
+        }
+    </script>
+}

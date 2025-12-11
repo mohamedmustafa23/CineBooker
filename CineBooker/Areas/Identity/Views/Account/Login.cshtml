@@ -1,0 +1,102 @@
+﻿@model CineBooker.ViewModels.LoginVM
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container_signup_signin" id="container_signup_signin">
+
+    <!-- Sign In Form -->
+    <div class="form-container sign-in-container">
+        <form name="sign-in-form" asp-action="Login" asp-controller="Account" method="post">
+            <div class="form-content">
+
+                <h1>Sign In</h1>
+
+                <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+
+                <div asp-validation-summary="All" class="text-danger text-center mb-2"></div>
+
+                <span>or use your account</span>
+                <div class="input-group">
+                    <input asp-for="UserNameOREmail" placeholder="User Name Or Email" />
+                    <span asp-validation-for="UserNameOREmail" class="text-danger"></span>
+                </div>
+
+                <div class="input-group">
+                    <input asp-for="Password" placeholder="Password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                
+                <div class="remember-me-container">
+                    <input type="checkbox" asp-for="RememberMe" id="RememberMe" />
+                    <label for="RememberMe">@Html.DisplayNameFor(model => model.RememberMe)</label>
+                </div>
+
+                <div>
+                    <a href="ForgetPassword">Forgot your password?</a>
+                </div>
+                <div>
+                    <a href="ResendEmailConfirmation">Resend Email Confirmation?</a>
+                </div>
+
+                <div>
+                    <button type="submit">Sign In</button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-left">
+                <h1>Welcome Back!</h1>
+                <p>To keep connected with us please login with your login details</p>
+                <button class="ghost" id="signIn">Sign In</button>
+            </div>
+            <div class="overlay-panel overlay-right">
+                <h1>Hello, Friend!</h1>
+                <p>Register and book your tickets now!</p>
+                <button class="ghost" id="signUp" onclick="window.location.href='@Url.Action("Register", "Account", new { area = "Identity" })'">Sign Up</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('container_signup_signin');
+            const signUpButton = document.getElementById('signUp');
+            const signInButton = document.getElementById('signIn');
+
+            signUpButton.addEventListener('click', () => {
+                container.classList.add("right-panel-active");
+            });
+
+            signInButton.addEventListener('click', () => {
+                container.classList.remove("right-panel-active");
+            });
+
+            // Auto switch to Sign In after registration
+            var justRegistered = '@TempData["JustRegistered"]';
+            if (justRegistered === 'True') {
+                container.classList.add("right-panel-active");
+                alert("✅ Account created successfully! Please sign in.");
+            }
+            else
+            {
+            // 👇 السطر ده يخلي الصفحة تبدأ بوضع التسجيل
+            container.classList.remove("right-panel-active");
+            }
+        });
+
+    </script>
+}

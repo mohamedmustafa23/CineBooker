@@ -1,0 +1,138 @@
+﻿@model CinemaHallVM
+
+@{
+    ViewData["Title"] = "Create Cinema Hall";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-plus-circle me-2"></i>Create Cinema Hall</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Create" method="post" class="needs-validation" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-door-open me-2"></i>Hall Information
+                </div>
+                <div class="card-body">
+                    <!-- Cinema Dropdown -->
+                    <div class="form-floating mb-3">
+                        <select asp-for="CinemaId" asp-items="@Model.CinemaList" class="form-select" required>
+                            <option value="" disabled selected>Select Cinema</option>
+                        </select>
+                        <label asp-for="CinemaId">Cinema *</label>
+                        <span asp-validation-for="CinemaId" class="text-danger"></span>
+                    </div>
+
+                    <!-- Hall Name -->
+                    <div class="form-floating mb-3">
+                        <input asp-for="Name" class="form-control" placeholder="Hall Name" required>
+                        <label asp-for="Name">Hall Name *</label>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seat Configuration -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-grid-3x3 me-2"></i>Seat Configuration
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="Rows" class="form-control" placeholder="Rows" min="1" max="30" required onchange="updatePreview()">
+                                <label asp-for="Rows">Number of Rows *</label>
+                                <span asp-validation-for="Rows" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="Columns" class="form-control" placeholder="Columns" min="1" max="40" required onchange="updatePreview()">
+                                <label asp-for="Columns">Seats per Row *</label>
+                                <span asp-validation-for="Columns" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Total Capacity: <strong id="totalSeats">150</strong> seats
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-eye me-2"></i>Seat Grid Preview
+                </div>
+                <div class="card-body">
+                    <div class="screen mb-3">SCREEN</div>
+                    <div class="seat-grid" id="seatPreview" style="grid-template-columns: repeat(15, 36px);">
+                    </div>
+                    <div class="d-flex justify-content-center gap-4 mt-3">
+                        <div class="d-flex align-items-center">
+                            <div class="seat available me-2" style="width: 24px; height: 24px;"></div>
+                            <small>Available</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Create Hall & Generate Seats
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function updatePreview() {
+            const rows = parseInt(document.getElementById('Rows').value) || 10;
+            const cols = parseInt(document.getElementById('Columns').value) || 15;
+
+            document.getElementById('totalSeats').textContent = rows * cols;
+
+            const preview = document.getElementById('seatPreview');
+            preview.style.gridTemplateColumns = `repeat(${Math.min(cols, 20)}, 36px)`;
+            preview.innerHTML = '';
+
+            const displayRows = Math.min(rows, 8); 
+            const displayCols = Math.min(cols, 20);
+
+            for (let r = 1; r <= displayRows; r++) {
+                for (let c = 1; c <= displayCols; c++) {
+                    const seat = document.createElement('div');
+                    seat.className = 'seat available';
+                    seat.textContent = String.fromCharCode(64 + r) + c;
+                    preview.appendChild(seat);
+                }
+            }
+
+            if (rows > 8 || cols > 20) {
+                const note = document.createElement('div');
+                note.className = 'text-muted text-center mt-2 w-100';
+                note.style.gridColumn = '1 / -1';
+                note.textContent = `Showing preview of ${displayRows}x${displayCols}. Actual: ${rows}x${cols}`;
+                preview.appendChild(note);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', updatePreview);
+    </script>
+}

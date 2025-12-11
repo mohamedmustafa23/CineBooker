@@ -1,0 +1,171 @@
+﻿@model IEnumerable<Show>
+@{
+    ViewData["Title"] = "Shows Management";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-calendar-event me-2"></i>Shows Management</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Show
+    </a>
+</div>
+
+<!-- Filter Section -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <select class="form-select" id="filterMovie" name="movieId" asp-items="ViewBag.Movies" onchange="this.form.submit()">
+                        <option value="">All Movies</option>
+                    </select>
+                    <label for="filterMovie">Movie</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-floating">
+                    <select class="form-select" id="filterCinema" name="cinemaId" asp-items="ViewBag.Cinemas" onchange="this.form.submit()">
+                        <option value="">All Cinemas</option>
+                    </select>
+                    <label for="filterCinema">Cinema</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-floating">
+                    <input type="date" class="form-control" id="filterDate" name="date" value="@ViewBag.SelectedDate" onchange="this.form.submit()">
+                    <label for="filterDate">Date</label>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-center gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 data-table">
+                <thead>
+                    <tr>
+                        <th>Movie</th>
+                        <th>Cinema / Hall</th>
+                        <th>Date & Time</th>
+                        <th>Seats (Occupancy)</th>
+                        <th>Revenue</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var show in Model)
+                        {
+                            var bookedSeatsCount = show.Bookings?.Sum(b => b.NumberOfSeats) ?? 0;
+
+                            var totalCapacity = show.ShowSeats?.Count ?? 0;
+
+                            var occupancyRate = totalCapacity > 0 ? (double)bookedSeatsCount / totalCapacity * 100 : 0;
+
+                            var revenue = show.Bookings?.Sum(b => b.Amount) ?? 0;
+
+                            string progressColor = "bg-success";
+                            if (occupancyRate > 80) progressColor = "bg-danger";
+                            else if (occupancyRate > 50) progressColor = "bg-warning";
+
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="@(string.IsNullOrEmpty(show.Movie?.PosterUrl) ? "https://via.placeholder.com/40x60" : show.Movie.PosterUrl)"
+                                             class="rounded me-2"
+                                             style="width: 40px; height: 60px; object-fit: cover;"
+                                             alt="Poster">
+                                        <div>
+                                            <div class="fw-semibold text-primary">@show.Movie?.Title</div>
+                                            <small class="text-muted">@show.Movie?.DurationInMinutes min</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@show.CinemaHall?.Cinema?.Name</div>
+                                    <small class="text-muted">@show.CinemaHall?.Name</small>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@show.StartTime.ToString("MMM dd, yyyy")</div>
+                                    <small class="text-muted">
+                                        @show.StartTime.ToString("hh:mm tt") - @show.EndTime.ToString("hh:mm tt")
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px; width: 80px;">
+                                            <div class="progress-bar @progressColor" role="progressbar" style="width: @occupancyRate%"></div>
+                                        </div>
+                                        <small class="text-muted" style="font-size: 0.75rem; min-width: 60px;">
+                                            @bookedSeatsCount / @totalCapacity
+                                        </small>
+                                    </div>
+                                </td>
+                                <td class="text-success fw-semibold">
+                                    @revenue.ToString("C0") 
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a asp-action="Edit" asp-route-id="@show.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="confirmDelete(@show.Id)"
+                                                title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    <form id="delete-form-@show.Id" asp-action="Delete" asp-route-id="@show.Id" method="post" style="display:none"></form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-x display-4 d-block mb-3"></i>
+                                No shows found matching your criteria.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Delete Show?',
+                text: "You won't be able to revert this! Ensure there are no active bookings.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`delete-form-${id}`).submit();
+                }
+            });
+        }
+    </script>
+}

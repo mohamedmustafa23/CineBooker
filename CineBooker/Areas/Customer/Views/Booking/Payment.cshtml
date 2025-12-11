@@ -1,0 +1,72 @@
+﻿@model PaymentVM
+@{
+    ViewData["Title"] = "Review Booking";
+}
+
+<div class="container py-5">
+    <div class="card shadow col-md-8 mx-auto">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Confirm Your Booking</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning text-center">
+                Time Remaining: <span id="timer" class="fw-bold fs-5">10:00</span>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-6 text-muted">Movie:</div>
+                <div class="col-6 fw-bold">@Model.MovieTitle</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-6 text-muted">Cinema:</div>
+                <div class="col-6">@Model.CinemaDetails</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-6 text-muted">Seats:</div>
+                <div class="col-6">@Model.SeatNumbers</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-6 text-muted">Date:</div>
+                <div class="col-6">@Model.ShowDate.ToString("g")</div>
+            </div>
+            <hr />
+            <div class="d-flex justify-content-between align-items-center">
+                <h3>Total:</h3>
+                <h3 class="text-success">$@Model.TotalAmount</h3>
+            </div>
+
+            <div class="mt-4">
+                <a asp-action="CreateStripeSession" asp-route-bookingId="@Model.BookingId"
+                   class="btn btn-primary btn-lg w-100">
+                    Pay Now <i class="bi bi-credit-card"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var expireTime = new Date('@Model.LockExpiration.ToString("yyyy-MM-ddTHH:mm:ssZ")').getTime();
+
+        var x = setInterval(function() {
+            var now = new Date().getTime();
+            var nowUTC = new Date().getTime() + (new Date().getTimezoneOffset() * 60000);
+
+            var distance = expireTime - nowUTC; 
+
+
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("timer").innerHTML = minutes + "m " + seconds + "s ";
+
+            if (distance < 0) {
+                clearInterval(x);
+                document.getElementById("timer").innerHTML = "EXPIRED";
+                alert("Session expired!");
+                window.location.href = '@Url.Action("Book", new { showId = Model.BookingId })'; 
+            }
+        }, 1000);
+    </script>
+}

@@ -1,0 +1,208 @@
+﻿@model CineBooker.ViewModels.ShowVM
+@{
+    ViewData["Title"] = "Create Show";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-plus-circle me-2"></i>Create Show</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Create" method="post" class="needs-validation" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-film me-2"></i>Show Information
+                </div>
+                <div class="card-body">
+                    <!-- Movie Select -->
+                    <div class="form-floating mb-3">
+                        <select asp-for="MovieId" asp-items="@Model.MovieList" class="form-select" required onchange="updateDuration()">
+                            <option value="">Select Movie</option>
+                        </select>
+                        <label asp-for="MovieId">Movie *</label>
+                        <span asp-validation-for="MovieId" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <!-- Cinema Select -->
+                            <div class="form-floating mb-3">
+                                <select asp-for="CinemaId" asp-items="@Model.CinemaList" class="form-select" required onchange="loadHalls()">
+                                    <option value="">Select Cinema</option>
+                                </select>
+                                <label asp-for="CinemaId">Cinema *</label>
+                                <span asp-validation-for="CinemaId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Hall Select (JS Populated) -->
+                            <div class="form-floating mb-3">
+                                <select asp-for="CinemaHallId" class="form-select" required onchange="updateSummary()">
+                                    <option value="">Select Hall</option>
+                                    @if (Model.HallList != null)
+                                    {
+                                        foreach (var item in Model.HallList)
+                                        {
+                                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <label asp-for="CinemaHallId">Cinema Hall *</label>
+                                <span asp-validation-for="CinemaHallId" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input asp-for="ShowDate" type="date" class="form-control" required>
+                                <label asp-for="ShowDate">Date *</label>
+                                <span asp-validation-for="ShowDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input asp-for="StartTime" type="time" class="form-control" required onchange="calculateEndTime()">
+                                <label asp-for="StartTime">Start Time *</label>
+                                <span asp-validation-for="StartTime" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="time" class="form-control" id="EndTime" readonly>
+                                <label for="EndTime">End Time (Approx)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="BasePrice" class="form-control" placeholder="Base Price" type="number" step="1" min="1" oninput="updateSummary()">
+                        <label asp-for="BasePrice">Ticket Price (Integer) *</label>
+                        <span asp-validation-for="BasePrice" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>Show Summary
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Movie Duration</span>
+                        <span class="fw-bold" id="movieDuration">-- min</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Hall Capacity</span>
+                        <span class="fw-bold" id="hallCapacity">-- seats</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Ticket Price</span>
+                        <span class="fw-bold" id="displayPrice">$0</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Max Potential Revenue</span>
+                        <span class="fw-bold text-success" id="maxRevenue">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Create Show
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        let currentMovieDuration = 0;
+        let selectedCapacity = 0;
+
+        function updateDuration() {
+            const movieId = document.getElementById('MovieId').value;
+            if(!movieId) return;
+
+            fetch(`/Admin/Show/GetMovieDuration?movieId=${movieId}`)
+                .then(res => res.json())
+                .then(data => {
+                    currentMovieDuration = data.duration;
+                    document.getElementById('movieDuration').textContent = currentMovieDuration + ' min';
+                    calculateEndTime();
+                });
+        }
+
+        function loadHalls() {
+            const cinemaId = document.getElementById('CinemaId').value;
+            const hallSelect = document.getElementById('CinemaHallId');
+
+            hallSelect.innerHTML = '<option value="">Loading...</option>';
+            selectedCapacity = 0;
+            updateSummary();
+
+            if (cinemaId) {
+                fetch(`/Admin/Show/GetHalls?cinemaId=${cinemaId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        hallSelect.innerHTML = '<option value="">Select Hall</option>';
+                        data.forEach(hall => {
+                            const option = document.createElement('option');
+                            option.value = hall.id;
+                            option.textContent = `${hall.name} (${hall.capacity} seats)`;
+                            option.dataset.capacity = hall.capacity;
+                            hallSelect.appendChild(option);
+                        });
+                    });
+            } else {
+                hallSelect.innerHTML = '<option value="">Select Hall</option>';
+            }
+        }
+
+        function calculateEndTime() {
+            const startTimeVal = document.getElementById('StartTime').value;
+            if (startTimeVal && currentMovieDuration) {
+                const [hours, minutes] = startTimeVal.split(':').map(Number);
+                let totalMinutes = hours * 60 + minutes + currentMovieDuration;
+                let endHours = Math.floor(totalMinutes / 60) % 24;
+                let endMinutes = totalMinutes % 60;
+
+                const endTimeStr = String(endHours).padStart(2, '0') + ':' + String(endMinutes).padStart(2, '0');
+                document.getElementById('EndTime').value = endTimeStr;
+            }
+        }
+
+        function updateSummary() {
+            const hallSelect = document.getElementById('CinemaHallId');
+            if(hallSelect.selectedIndex >= 0) {
+                const option = hallSelect.options[hallSelect.selectedIndex];
+                selectedCapacity = parseInt(option.dataset.capacity) || 0;
+                document.getElementById('hallCapacity').textContent = selectedCapacity ? selectedCapacity + ' seats' : '--';
+            }
+
+            const price = parseInt(document.getElementById('BasePrice').value) || 0;
+            document.getElementById('displayPrice').textContent = '$' + price;
+
+            if (selectedCapacity && price) {
+                document.getElementById('maxRevenue').textContent = '$' + (selectedCapacity * price).toLocaleString();
+            } else {
+                document.getElementById('maxRevenue').textContent = '--';
+            }
+        }
+    </script>
+}

@@ -1,0 +1,141 @@
+﻿@model CinemaVM
+@{
+    ViewData["Title"] = "Edit Cinema";
+    var totalSeats = Model.Cinema.CinemaHalls?.Sum(h => h.Seats?.Count ?? 0) ?? 0;
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-pencil-square me-2"></i>Edit Cinema</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <input type="hidden" asp-for="Cinema.Id" />
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-building me-2"></i>Cinema Information
+                </div>
+                <div class="card-body">
+                    <div class="form-floating mb-3">
+                        <input asp-for="Cinema.Name" class="form-control" placeholder="Cinema Name" required>
+                        <label asp-for="Cinema.Name">Cinema Name *</label>
+                        <span asp-validation-for="Cinema.Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Cinema.AddressLine" class="form-control" placeholder="Address Line" required>
+                        <label asp-for="Cinema.AddressLine">Address Line *</label>
+                        <span asp-validation-for="Cinema.AddressLine" class="text-danger"></span>
+                    </div>
+
+                    <!-- Address Selection -->
+                    <div class="form-floating mb-3">
+                        <select asp-for="SelectedAddressId" asp-items="@Model.AddressList" class="form-select" required>
+                            <option disabled>-- Select an Address --</option>
+                        </select>
+                        <label asp-for="SelectedAddressId">Location / Address *</label>
+                        <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Halls List -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-door-open me-2"></i>Cinema Halls</span>
+                    <a href="/Admin/CinemaHall/Create?cinemaId=@Model.Cinema.Id" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Add Hall
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Hall Name</th>
+                                    <th>Seats</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Cinema.CinemaHalls != null && Model.Cinema.CinemaHalls.Any())
+                                {
+                                    foreach (var hall in Model.Cinema.CinemaHalls)
+                                    {
+                                        <tr>
+                                            <td><div class="fw-semibold">@hall.Name</div></td>
+                                            <td>@(hall.Seats?.Count ?? 0) seats</td>
+                                            <td class="text-end">
+                                                <a href="/Admin/CinemaHall/Edit/@hall.Id" class="btn btn-sm btn-outline-primary btn-action"><i class="bi bi-pencil"></i></a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="3" class="text-center text-muted py-3">No halls found.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-image me-2"></i>Photo
+                </div>
+                <div class="card-body">
+                    <div class="image-upload-preview mb-3" id="photoPreview" data-input="#PhotoFile" style="height: 200px; max-width: 200px;">
+                        <div class="upload-placeholder">
+                            <i class="bi bi-person-bounding-box"></i>
+                            <div>Click to upload</div>
+                            <small class="text-muted">JPG, PNG (Max 5MB)</small>
+                        </div>
+                    </div>
+                    <input type="file" class="form-control image-upload-input" id="PhotoFile" asp-for="CinemaLogo" accept="image/*" data-preview="#photoPreview" hidden>
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="document.getElementById('PhotoFile').click()">
+                        <i class="bi bi-upload me-1"></i>Choose Photo
+                    </button>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-bar-chart me-2"></i>Statistics
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Total Halls</span>
+                        <span class="fw-bold">@Model.Cinema.CinemaHalls?.Count</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Total Seats</span>
+                        <span class="fw-bold">@totalSeats</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Save Changes
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

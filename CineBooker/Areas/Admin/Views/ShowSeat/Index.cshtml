@@ -1,0 +1,248 @@
+﻿@model ShowSeatVM
+
+@{
+    ViewData["Title"] = "Show Seat Management";
+
+    int maxCols = Model.ShowSeats.Any() ? Model.ShowSeats.Max(s => s.Seat.SeatCol) : 20;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header">
+    <h1><i class="bi bi-grid me-2"></i>Show Seat Management</h1>
+    <a href="/Admin/Show" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Shows
+    </a>
+</div>
+
+<div class="filter-card card mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <div class="form-floating">
+                    <select class="form-select" id="filterShow" name="showId" asp-items="Model.ShowList" onchange="this.form.submit()">
+                        <option value="">-- Select a Show to Manage Seats --</option>
+                    </select>
+                    <label for="filterShow">Select Show</label>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.SelectedShow != null)
+{
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-grid me-2"></i>Map: @Model.SelectedShow.Movie.Title</span>
+                    <span class="badge bg-secondary">@Model.SelectedShow.CinemaHall.Name</span>
+                </div>
+                <div class="card-body">
+                    <div class="screen mb-3">SCREEN</div>
+
+                    <div class="seat-grid" id="seatGrid"
+                         style="grid-template-columns: repeat(@Math.Min(maxCols, 25), 32px); overflow-x: auto; justify-content: center;">
+
+                        @foreach (var seat in Model.ShowSeats)
+                        {
+                            string statusClass = seat.Status switch
+                            {
+                                SeatStatus.Booked => "booked",
+                                SeatStatus.Locked => "locked",
+                                _ => "available"
+                            };
+
+                            <div class="seat @statusClass"
+                                 title="@seat.Status - Click to Lock/Unlock"
+                                 onclick="toggleSeatLock(@seat.Id)">
+                                @((char)(seat.Seat.SeatRow + 64))@seat.Seat.SeatCol
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-4 mt-3 small text-muted">
+                        <div class="d-flex align-items-center"><div class="seat available me-2" style="width:20px;height:20px;cursor:default;"></div>Available (Click to Lock)</div>
+                        <div class="d-flex align-items-center"><div class="seat locked me-2" style="width:20px;height:20px;cursor:default;"></div>Locked (Click to Unlock)</div>
+                        <div class="d-flex align-items-center"><div class="seat booked me-2" style="width:20px;height:20px;cursor:default;"></div>Booked</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Statistics</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2"><span>Total</span><span class="fw-bold">@Model.TotalSeats</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Available</span><span class="fw-bold text-success">@Model.AvailableCount</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Locked</span><span class="fw-bold text-warning">@Model.LockedCount</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Booked</span><span class="fw-bold text-danger">@Model.BookedCount</span></div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between"><span>Occupancy</span><span class="fw-bold">@Model.OccupancyRate%</span></div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-lock me-2"></i>Locked Seats</span>
+                    @if (Model.LockedCount > 0)
+                    {
+                        <button class="btn btn-sm btn-outline-warning" onclick="releaseAllLocks(@Model.ShowId)">Release All</button>
+                    }
+                </div>
+                <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                    @if (Model.LockedSeatsList.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var seat in Model.LockedSeatsList)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="bi bi-chair me-1"></i>
+                                        Seat <strong>@((char)(seat.Seat.SeatRow + 64))@seat.Seat.SeatCol</strong>
+                                    </span>
+                                    <button class="btn btn-xs btn-outline-danger" onclick="toggleSeatLock(@seat.Id)">
+                                        <i class="bi bi-unlock"></i>
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="p-3 text-center text-muted small">No locked seats currently.</div>
+                    }
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <a href="/Admin/ShowSeat/Index?showId=@Model.ShowId" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Refresh Data
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info text-center mt-5">
+        <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
+        Select a show from the dropdown above to manage its seats.
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function toggleSeatLock(seatId) {
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (!tokenInput) {
+                alert("Security token not found. Please refresh page.");
+                return;
+            }
+            const token = tokenInput.value;
+
+            fetch('/Admin/ShowSeat/ToggleSeatLock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token 
+                },
+                body: `showSeatId=${seatId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Warning: ' + data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Communication Error.');
+            });
+        }
+
+        function releaseAllLocks(showId) {
+            if (!confirm('Are you sure you want to release ALL locked seats for this show?')) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            fetch('/Admin/ShowSeat/ReleaseAllLocks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `showId=${showId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) location.reload();
+                else alert('Error occurred.');
+            });
+        }
+    </script>
+
+    <style>
+        .seat-grid {
+            display: grid;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .screen {
+            background: #e9ecef;
+            height: 30px;
+            width: 100%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #adb5bd;
+            letter-spacing: 5px;
+            border-radius: 0 0 50% 50% / 0 0 20px 20px;
+            box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
+        }
+
+        .seat {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+
+            .seat:hover {
+                transform: scale(1.1);
+                opacity: 0.9;
+            }
+
+            .seat.available {
+                background-color: #fff;
+                border: 1px solid #ced4da;
+                color: #495057;
+            }
+
+            .seat.booked {
+                background-color: #dc3545;
+                border: 1px solid #dc3545;
+                cursor: not-allowed; 
+            }
+
+            .seat.locked {
+                background-color: #ffc107; 
+                border: 1px solid #ffc107;
+                color: #212529;
+            }
+    </style>
+}

@@ -1,0 +1,400 @@
+﻿/* ========================================
+   CSS Variables & Theme Setup
+   ======================================== */
+:root {
+    --primary-color: #e50914; /* Netflix Red style */
+    --primary-hover: #b20710;
+    --transition-speed: 0.3s;
+    --card-border-radius: 12px;
+}
+
+/* Light Mode specific overrides */
+[data-bs-theme="light"] {
+    --bg-glass: rgba(255, 255, 255, 0.9);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --hero-overlay: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 1));
+}
+
+/* Dark Mode specific overrides */
+[data-bs-theme="dark"] {
+    --bg-glass: rgba(20, 20, 20, 0.9);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --hero-overlay: linear-gradient(rgba(0, 0, 0, 0.3), #212529);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+/* ========================================
+   Navbar Glass Effect
+   ======================================== */
+.glass-effect {
+    background-color: var(--bg-glass) !important;
+    backdrop-filter: blur(10px);
+    transition: background-color var(--transition-speed);
+}
+
+.logo-text {
+    letter-spacing: -1px;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+    .nav-link:hover, .nav-link.active {
+        color: var(--primary-color) !important;
+    }
+
+/* ========================================
+   Buttons
+   ======================================== */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: 600;
+}
+
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(229, 9, 20, 0.3);
+    }
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: 600;
+}
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+/* ========================================
+   Hero Section
+   ======================================== */
+.hero-section {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    background: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600&h=900&fit=crop') no-repeat center center/cover;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--hero-overlay);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* ========================================
+   City & Movie Cards (Interactivity Fix)
+   ======================================== */
+.card {
+    border: none;
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    background-color: var(--bs-body-bg); /* Bootstrap variable for theme */
+    box-shadow: var(--card-shadow);
+}
+
+.city-card .card:hover,
+.movie-card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(229, 9, 20, 0.15); /* Reddish glow */
+    cursor: pointer;
+}
+
+.card-img-overlay-wrapper {
+    position: relative;
+    height: 100%;
+}
+
+.card-img-top {
+    transition: transform 0.5s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.1);
+}
+
+/* FIX: Stronger gradient for text visibility */
+.city-overlay-gradient {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
+    color: white; /* Force white text regardless of theme */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    transition: padding-bottom 0.3s;
+}
+
+.card:hover .city-overlay-gradient {
+    padding-bottom: 25px; /* Slight lift effect */
+}
+
+/* ========================================
+   Utilities
+   ======================================== */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.hover-primary:hover {
+    color: var(--primary-color) !important;
+    transition: color 0.2s;
+}
+
+.fade-in {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading Spinner */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bs-body-bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0.9;
+}
+/* Dropdown Customization */
+.dropdown-menu {
+    background-color: var(--bs-body-bg); /* يأخذ لون الخلفية حسب الثيم */
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+    .dropdown-item:hover {
+        background-color: rgba(229, 9, 20, 0.1); /* أحمر خفيف */
+        color: var(--primary-color);
+    }
+
+.dropdown-toggle::after {
+    vertical-align: middle;
+}
+
+/* تحسين شكل الصورة في الناف بار */
+.show-dropdown-arrow {
+    color: var(--text-primary) !important;
+}
+
+    .show-dropdown-arrow:hover {
+        color: var(--primary-color) !important;
+    }
+/* =========================================
+                   Booking Specific Styles (Extends Global CSS)
+                   ========================================= */
+/* 1. Theme Variables for Booking Page */
+:root {
+    --seat-avail-bg: #e2e8f0;
+    --seat-avail-text: #475569;
+    --seat-hover-transform: translateY(-5px);
+    --seat-booked-bg: #cbd5e1;
+    --seat-booked-text: #94a3b8;
+    --screen-bg: #cbd5e1;
+    --screen-shadow: 0 25px 40px rgba(0,0,0,0.1);
+}
+
+[data-bs-theme="dark"] {
+    --seat-avail-bg: #2b2b40;
+    --seat-avail-text: #cbd5e1;
+    --seat-booked-bg: #181824;
+    --seat-booked-text: #4b4b60;
+    --screen-bg: #4a4a60;
+    --screen-shadow: 0 25px 50px rgba(229, 9, 20, 0.15); /* Red glow in dark mode */
+}
+
+/* 2. 3D Screen Effect */
+.screen-container {
+    perspective: 900px;
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.screen {
+    height: 60px;
+    width: 100%;
+    max-width: 80%;
+    background: linear-gradient(to bottom, var(--screen-bg), transparent);
+    transform: rotateX(-25deg) scale(0.9);
+    box-shadow: var(--screen-shadow);
+    border-radius: 10px 10px 50px 50px;
+    opacity: 0.8;
+    position: relative;
+    margin-bottom: 15px;
+    border-top: 2px solid rgba(255,255,255,0.1);
+}
+
+/* 3. Seat Grid */
+.seat-grid-wrapper {
+    background-color: var(--bs-body-bg); /* Use Bootstrap var */
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: var(--card-shadow); /* From your global CSS */
+    display: inline-block;
+}
+
+.seat-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr); /* 10 columns */
+    gap: 12px;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.seat-item {
+    height: 40px;
+    width: 45px;
+    border-radius: 12px 12px 6px 6px; /* Chair Shape */
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    position: relative;
+    user-select: none;
+}
+
+    /* Armrests effect */
+    .seat-item::before {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: -2px;
+        width: 4px;
+        height: 14px;
+        background-color: inherit;
+        border-radius: 4px;
+        filter: brightness(0.9);
+    }
+
+    .seat-item::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        right: -2px;
+        width: 4px;
+        height: 14px;
+        background-color: inherit;
+        border-radius: 4px;
+        filter: brightness(0.9);
+    }
+
+/* Status: Available */
+.seat-avail {
+    background-color: var(--seat-avail-bg);
+    color: var(--seat-avail-text);
+}
+
+    .seat-avail:hover {
+        transform: var(--seat-hover-transform);
+        background-color: var(--primary-color); /* Uses your global Red */
+        color: white;
+        box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
+    }
+
+/* Status: Selected */
+.seat-item.selected {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(229, 9, 20, 0.6);
+    z-index: 2;
+}
+
+/* Status: Booked */
+.seat-item.disabled {
+    background-color: var(--seat-booked-bg);
+    color: var(--seat-booked-text);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* 4. Legend */
+.legend-dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+/* 5. Sticky Summary Card */
+.booking-summary-wrapper {
+    position: sticky;
+    top: 100px; /* Adjust based on navbar height */
+}
+
+.summary-card {
+    background: var(--bg-glass); /* From your global CSS */
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+/* Selected Seats Badges */
+.seat-badge {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    display: inline-block;
+    margin: 2px;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@@keyframes popIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

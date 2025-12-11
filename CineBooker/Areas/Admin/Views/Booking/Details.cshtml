@@ -1,0 +1,219 @@
+﻿@model Booking
+
+@{
+    ViewData["Title"] = "Booking Details";
+
+    string statusBadgeClass = "bg-secondary";
+    string statusText = Model.StatusOfPayment.ToString();
+
+    switch (Model.StatusOfPayment)
+    {
+        case PaymentStatus.Approved: statusBadgeClass = "bg-success"; statusText = "Paid"; break;
+        case PaymentStatus.Pending: statusBadgeClass = "bg-warning text-dark"; break;
+        case PaymentStatus.Rejected: statusBadgeClass = "bg-danger"; break;
+    }
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-ticket-perforated me-2"></i>Booking Details</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-receipt me-2"></i>Booking #@Model.Id</span>
+                <span class="badge @statusBadgeClass fs-6">@statusText</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Customer Information</h5>
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="https://ui-avatars.com/api/?name=@(Model.User?.UserName ?? "User")&size=60" class="rounded-circle me-3" alt="User">
+                            <div>
+                                <div class="fw-semibold fs-5">@(Model.User?.UserName ?? "Unknown User")</div>
+                                <div class="text-muted">@(Model.User?.Email ?? "No Email")</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Booking Details</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Booking Date</span>
+                            <span>@Model.BookedDate.ToString("MMM dd, yyyy at hh:mm tt")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Payment Method</span>
+                            <span>Credit Card</span> 
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Reference / Conf. No</span>
+                            <span class="font-monospace">@(Model.ConfirmationNumber ?? "N/A")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Show Information</h5>
+                        <div class="d-flex">
+                            <img src="@(string.IsNullOrEmpty(Model.Show.Movie.PosterUrl) ? "https://via.placeholder.com/80x120" : Model.Show.Movie.PosterUrl)"
+                                 class="rounded me-3" style="width: 80px; height: 120px; object-fit: cover;" alt="Poster">
+                            <div>
+                                <div class="fw-semibold fs-5">@Model.Show.Movie.Title</div>
+                                <div class="text-muted mb-2 small">Duration: @Model.Show.Movie.DurationInMinutes min</div>
+                                <div><i class="bi bi-calendar me-1"></i>@Model.Show.StartTime.ToString("MMM dd, yyyy")</div>
+                                <div><i class="bi bi-clock me-1"></i>@Model.Show.StartTime.ToString("hh:mm tt") - @Model.Show.EndTime.ToString("hh:mm tt")</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Venue</h5>
+                        <div><i class="bi bi-building me-1"></i><strong>@Model.Show.CinemaHall.Cinema.Name</strong></div>
+                        <div class="text-muted mb-2">
+                            @if (Model.Show.CinemaHall.Cinema.Address != null)
+                            {
+                                <span>@Model.Show.CinemaHall.Cinema.Address.City</span>
+                            }
+                        </div>
+                        <div><i class="bi bi-door-open me-1"></i><strong>@Model.Show.CinemaHall.Name</strong></div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5 class="mb-3">Booked Seats (@Model.NumberOfSeats)</h5>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    @foreach (var bs in Model.BookingSeats)
+                    {
+                        char rowChar = (char)(bs.ShowSeat.Seat.SeatRow + 64);
+
+                        <div class="border rounded p-3 text-center" style="min-width: 80px;">
+                            <div class="fw-bold fs-4">@rowChar@bs.ShowSeat.Seat.SeatCol</div>
+                            <small class="text-muted">Row @rowChar</small>
+                            <div class="text-success">@bs.ShowSeat.Price.ToString("C0")</div>
+                        </div>
+                    }
+                </div>
+
+                <hr>
+
+                <h5 class="mb-3">Payment Summary</h5>
+                <div class="rounded p-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Ticket Total (@Model.NumberOfSeats seats)</span>
+                        <span>@Model.Amount.ToString("C0")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Service Fee</span>
+                        <span>$0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold fs-5">
+                        <span>Total Amount</span>
+                        <span class="text-success">@Model.Amount.ToString("C0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Actions -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-gear me-2"></i>Actions
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i>Print Ticket
+                    </button>
+
+                    @if (Model.StatusOfPayment == PaymentStatus.Pending)
+                    {
+                        <form asp-action="ApprovePayment" asp-route-id="@Model.Id" method="post" class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i>Approve Payment
+                            </button>
+                        </form>
+                    }
+
+                    @if (Model.StatusOfPayment != PaymentStatus.Rejected)
+                    {
+                        <button class="btn btn-outline-danger" onclick="confirmCancel(@Model.Id)">
+                            <i class="bi bi-x-circle me-1"></i>Cancel Booking
+                        </button>
+
+                        <form id="cancelForm" asp-action="CancelBooking" asp-route-id="@Model.Id" method="post" style="display:none"></form>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Log (Static for now as mostly needed) -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clock-history me-2"></i>Timeline
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @if (Model.StatusOfPayment == PaymentStatus.Approved)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-semibold text-success">Payment Received</span>
+                                <small class="text-muted">@Model.BookedDate.ToString("hh:mm tt")</small>
+                            </div>
+                            <small class="text-muted">@Model.BookedDate.ToString("MMM dd, yyyy")</small>
+                        </div>
+                    }
+                    else if (Model.StatusOfPayment == PaymentStatus.Rejected)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-semibold text-danger">Booking Cancelled</span>
+                                <small class="text-muted">--</small>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-semibold text-primary">Booking Created</span>
+                            <small class="text-muted">@Model.BookedDate.ToString("hh:mm tt")</small>
+                        </div>
+                        <small class="text-muted">@Model.BookedDate.ToString("MMM dd, yyyy")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmCancel(id) {
+            Swal.fire({
+                title: 'Cancel Booking?',
+                text: "This will release the seats and mark payment as rejected/cancelled.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Cancel it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('cancelForm').submit();
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,201 @@
+﻿@model CinemaListVM
+
+@{
+    ViewData["Title"] = @Model.CityName + " Cinemas";
+}
+
+<!-- Breadcrumb -->
+<section class="bg-body-tertiary py-3 border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")" class="text-decoration-none text-muted hover-primary">
+                        <i class="bi bi-house-door"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">
+                    Cinemas in @Model.CityName
+                </li>
+            </ol>
+        </nav>
+    </div>
+</section>
+
+<!-- Page Header -->
+<section class="py-5 bg-body text-body border-bottom">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-md-6">
+                <h1 class="fw-bold mb-2 display-5">
+                    <i class="bi bi-building text-primary me-2"></i>
+                    @Model.CityName
+                </h1>
+                <p class="text-muted lead mb-0">Choose a cinema to view available movies and showtimes</p>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-lg shadow-sm">
+                    <span class="input-group-text bg-body border-end-0">
+                        <i class="bi bi-search text-primary"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0 ps-0"
+                           id="cinemaSearch" placeholder="Search cinemas..." onkeyup="filterCinemas()">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Cinemas List -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="cinemaCount">@Model.Cinemas.Count Cinemas Found</span>
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-outline-secondary active" onclick="setView('grid')" title="Grid View">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </button>
+                <button class="btn btn-outline-secondary" onclick="setView('list')" title="List View">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4" id="cinemasGrid">
+            @if (Model.Cinemas.Any())
+            {
+                foreach (var cinema in Model.Cinemas)
+                {
+                    <div class="col-lg-4 col-md-6 cinema-card" data-name="@cinema.Name.ToLower()">
+                        <div class="card h-100 border-0 shadow-sm hover-card">
+                            <div class="position-relative overflow-hidden">
+                                <img src="@cinema.ImageUrl"
+                                     class="card-img-top object-fit-cover" alt="@cinema.Name" style="height: 200px;">
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-warning text-dark shadow-sm">
+                                        <i class="bi bi-star-fill me-1"></i>@cinema.Rating
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-2 text-truncate" title="@cinema.Name">@cinema.Name</h5>
+                                <p class="card-text text-muted small mb-3">
+                                    <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                    @cinema.Address
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center mb-3 border-top border-bottom py-2">
+                                    <span class="text-body fw-semibold">
+                                        <i class="bi bi-door-open-fill text-primary me-1"></i>
+                                        @cinema.HallCount Halls
+                                    </span>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-clock me-1"></i>10:00 AM - 11:30 PM
+                                    </span>
+                                </div>
+                                <div class="d-flex gap-2 mb-3 flex-wrap">
+                                    @foreach (var feature in cinema.Features.Take(3))
+                                    {
+                                        <span class="badge bg-body-secondary text-body border">
+                                            <i class="bi bi-check2-circle me-1 text-success"></i>@feature
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                                <!-- الرابط هنا يوجه لصفحة قائمة الأفلام في هذه السينما -->
+                                <a href="@Url.Action("MovieList", "Home", new { cinemaId = cinema.Id })" class="btn btn-primary w-100 fw-semibold rounded-pill">
+                                    <i class="bi bi-ticket-perforated me-2"></i>View Showtimes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-building-slash display-1 text-muted mb-3"></i>
+                    <h3 class="text-muted">No cinemas found in this location.</h3>
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-outline-primary mt-3">Browse other cities</a>
+                </div>
+            }
+        </div>
+
+        <!-- No Results Message (For JS Filter) -->
+        <div class="text-center py-5 d-none" id="noResults">
+            <i class="bi bi-search display-1 text-muted mb-3"></i>
+            <h4 class="mt-3 text-muted">No cinemas match your search</h4>
+            <button class="btn btn-link text-decoration-none" onclick="document.getElementById('cinemaSearch').value=''; filterCinemas();">Clear Search</button>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function filterCinemas() {
+            let input = document.getElementById('cinemaSearch').value.toLowerCase();
+            let cards = document.querySelectorAll('.cinema-card');
+            let noResults = document.getElementById('noResults');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                let name = card.getAttribute('data-name');
+                if (name.includes(input)) {
+                    card.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    card.classList.add('d-none');
+                }
+            });
+
+            document.getElementById('cinemaCount').textContent = visibleCount + ' Cinemas Found';
+
+            if (visibleCount === 0) noResults.classList.remove('d-none');
+            else noResults.classList.add('d-none');
+        }
+
+        function setView(view) {
+            const grid = document.getElementById('cinemasGrid');
+            const btns = document.querySelectorAll('.btn-group button');
+
+            // Toggle buttons active state
+            btns.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            if (view === 'list') {
+                grid.classList.add('list-view'); // You can add CSS for list view if needed
+                // For simple implementation, convert cols to full width
+                document.querySelectorAll('.cinema-card').forEach(col => {
+                    col.classList.remove('col-lg-4', 'col-md-6');
+                    col.classList.add('col-12');
+                });
+            } else {
+                grid.classList.remove('list-view');
+                document.querySelectorAll('.cinema-card').forEach(col => {
+                    col.classList.add('col-lg-4', 'col-md-6');
+                    col.classList.remove('col-12');
+                });
+            }
+        }
+    </script>
+
+    <style>
+        .hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+            .hover-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            }
+
+        /* Dark mode compatibility fixes */
+        [data-bs-theme="dark"] .bg-body-tertiary {
+            background-color: #212529 !important;
+        }
+
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #1a1a1a !important;
+        }
+    </style>
+}

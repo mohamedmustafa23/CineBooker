@@ -1,0 +1,387 @@
+@model MovieVM
+@{
+    ViewData["Title"] = "Create Movie";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-plus-circle me-2"></i>Create Movie</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>Basic Information
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-floating mb-3">
+                                <input asp-for="movie.Title" class="form-control" placeholder="Movie Title" required>
+                                <label asp-for="movie.Title">Title *</label>
+                                <span asp-validation-for="movie.Title" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input asp-for="movie.DurationInMinutes" class="form-control" placeholder="Duration" min="1" required>
+                                <label asp-for="movie.DurationInMinutes">Duration (minutes) *</label>
+                                <span asp-validation-for="movie.DurationInMinutes" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="movie.Description" class="form-control" placeholder="Description" style="height: 120px" required></textarea>
+                        <label asp-for="movie.Description">Description *</label>
+                        <span asp-validation-for="movie.Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="movie.Director" class="form-control" placeholder="Director" required>
+                                <label asp-for="movie.Director">Director *</label>
+                                <span asp-validation-for="movie.Director" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="movie.Language" class="form-control" placeholder="Language" required>
+                                <label asp-for="movie.Language">Language *</label>
+                                <span asp-validation-for="movie.Language" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="movie.ReleaseDate" type="date" class="form-control" required>
+                                <label asp-for="movie.ReleaseDate">Release Date *</label>
+                                <span asp-validation-for="movie.ReleaseDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select asp-for="movie.Rating" class="form-select" required>
+                                    <option value="">Select Rating</option>
+                                    <option value="G">G - General Audiences</option>
+                                    <option value="PG">PG - Parental Guidance</option>
+                                    <option value="PG-13">PG-13 - Parents Strongly Cautioned</option>
+                                    <option value="R">R - Restricted</option>
+                                    <option value="NC-17">NC-17 - Adults Only</option>
+                                </select>
+                                <label asp-for="movie.Rating">Rating *</label>
+                                <span asp-validation-for="movie.Rating" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="movie.TrailerUrl" type="url" class="form-control" placeholder="Trailer URL">
+                        <label asp-for="movie.TrailerUrl">Trailer URL (YouTube)</label>
+                        <span asp-validation-for="movie.TrailerUrl" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Genres -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-tags me-2"></i>Genres *
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var genre in Model.Genres)
+                        {
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="GenreIds" value="@genre.Id" id="genre@(genre.Id)">
+                                    <label class="form-check-label" for="genre@(genre.Id)">
+                                        @genre.Name
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <span class="text-danger" id="genreError"></span>
+                </div>
+            </div>
+
+            <!-- Cast -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-person-video3 me-2"></i>Cast</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addActorModal">
+                        <i class="bi bi-plus-lg me-1"></i>Add Actor
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="castTable">
+                            <thead>
+                                <tr>
+                                    <th>Actor</th>
+                                    <th>Character Name</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="no-actors-row">
+                                    <td colspan="3" class="text-center text-muted py-4">
+                                        <i class="bi bi-person-plus fs-1 d-block mb-2"></i>
+                                        No actors added yet. Click "Add Actor" to add cast members.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Poster -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-image me-2"></i>Poster Image *
+                </div>
+                <div class="card-body">
+                    <div class="image-upload-preview mb-3" id="posterPreview">
+                        <div class="upload-placeholder">
+                            <i class="bi bi-cloud-upload"></i>
+                            <div>Click to upload</div>
+                            <small class="text-muted">JPG, PNG (Max 5MB)</small>
+                        </div>
+                        <img id="posterPreviewImg" style="display: none; width: 100%; border-radius: 8px;" />
+                    </div>
+                    <input type="file" class="form-control" id="PosterFile" name="PosterFile" accept="image/*" hidden required>
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="document.getElementById('PosterFile').click()">
+                        <i class="bi bi-upload me-1"></i>Choose Image
+                    </button>
+                    <span asp-validation-for="movie.PosterUrl" class="text-danger"></span>
+                    <span class="text-danger" id="posterError"></span>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-gear me-2"></i>Settings
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input asp-for="movie.IsActive" class="form-check-input" type="checkbox" checked>
+                        <label asp-for="movie.IsActive" class="form-check-label">Active (visible to users)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Create Movie
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Add Actor Modal -->
+<div class="modal fade" id="addActorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add Actor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="selectActor">
+                        <option value="">Select Actor</option>
+                        @foreach (var actor in Model.Actors)
+                        {
+                            <option value="@actor.Id">@actor.Name</option>
+                        }
+                    </select>
+                    <label for="selectActor">Actor</label>
+                </div>
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="characterName" placeholder="Character Name">
+                    <label for="characterName">Character Name</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addActorToList()">Add Actor</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .image-upload-preview {
+        width: 100%;
+        height: 300px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .image-upload-preview:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+
+    .upload-placeholder {
+        text-align: center;
+        color: #6c757d;
+    }
+
+        .upload-placeholder i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let actorIndex = 0;
+
+        // Image preview
+        document.getElementById('PosterFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    document.getElementById('posterError').textContent = 'Image size must not exceed 5MB.';
+                    e.target.value = '';
+                    return;
+                }
+
+                document.getElementById('posterError').textContent = '';
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = document.getElementById('posterPreviewImg');
+                    img.src = event.target.result;
+                    img.style.display = 'block';
+                    document.querySelector('.upload-placeholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function addActorToList() {
+            const select = document.getElementById('selectActor');
+            const actorId = select.value;
+            const actorName = select.options[select.selectedIndex].text;
+            const characterName = document.getElementById('characterName').value;
+
+            if (!actorId || !characterName) {
+                alert('Please select an actor and enter character name.');
+                return;
+            }
+
+            const tbody = document.querySelector('#castTable tbody');
+            const noActorsRow = tbody.querySelector('.no-actors-row');
+            if (noActorsRow) {
+                noActorsRow.remove();
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(actorName)}&size=40" class="rounded-circle me-2" alt="${actorName}">
+                        <span>${actorName}</span>
+                    </div>
+                    <input type="hidden" name="MovieActors[${actorIndex}].ActorId" value="${actorId}">
+                </td>
+                <td>
+                    ${characterName}
+                    <input type="hidden" name="MovieActors[${actorIndex}].CharacterName" value="${characterName}">
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeActor(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+            actorIndex++;
+
+            select.value = '';
+            document.getElementById('characterName').value = '';
+            bootstrap.Modal.getInstance(document.getElementById('addActorModal')).hide();
+        }
+
+        function removeActor(button) {
+            const row = button.closest('tr');
+            row.remove();
+
+            const tbody = document.querySelector('#castTable tbody');
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="no-actors-row">
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="bi bi-person-plus fs-1 d-block mb-2"></i>
+                            No actors added yet. Click "Add Actor" to add cast members.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const genreCheckboxes = document.querySelectorAll('input[name="GenreIds"]:checked');
+            const genreError = document.getElementById('genreError');
+
+            if (genreCheckboxes.length === 0) {
+                e.preventDefault();
+                genreError.textContent = 'Please select at least one genre.';
+                genreError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            } else {
+                genreError.textContent = '';
+            }
+
+            const posterFile = document.getElementById('PosterFile');
+            const posterError = document.getElementById('posterError');
+
+            if (!posterFile.files || posterFile.files.length === 0) {
+                e.preventDefault();
+                posterError.textContent = 'Please upload a poster image.';
+                posterError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            } else {
+                posterError.textContent = '';
+            }
+        });
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

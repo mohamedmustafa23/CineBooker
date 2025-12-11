@@ -1,0 +1,102 @@
+﻿@model CineBooker.ViewModels.RegisterVM
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container_signup_signin" id="container_signup_signin">
+    <!-- Sign Up Form -->
+    <div class="form-container sign-up-container">
+        <form name="sign-up-form" asp-action="Register" asp-controller="Account" method="post">
+            <div class="form-content">
+                <h1>Create Account</h1>
+                <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+                <span>or use your email for registration</span>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <input type="text" placeholder="First Name" asp-for="FirstName" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" placeholder="Last Name" asp-for="LastName" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" placeholder="Username" asp-for="UserName" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" placeholder="Email" asp-for="Email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" placeholder="Password" asp-for="Password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" placeholder="Confirm Password" asp-for="ConfirmPassword" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit">Sign Up</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay-container">
+        <div class="overlay">
+            <div class="overlay-panel overlay-left">
+                <h1>Welcome Back!</h1>
+                <p>To keep connected with us please login with your login details</p>
+                <button class="ghost" id="signIn" onclick="window.location.href='@Url.Action("Login", "Account", new { area = "Identity" })'">Sign In</button>
+            </div>
+            <div class="overlay-panel overlay-right">
+                <h1>Hello, Friend!</h1>
+                <p>Register and book your tickets now!</p>
+                <button class="ghost" id="signUp">Sign Up</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('container_signup_signin');
+            const signUpButton = document.getElementById('signUp');
+            const signInButton = document.getElementById('signIn');
+
+            signUpButton.addEventListener('click', () => {
+                container.classList.add("right-panel-active");
+            });
+
+            signInButton.addEventListener('click', () => {
+                container.classList.remove("right-panel-active");
+            });
+
+            // Auto switch to Sign In after registration
+            var justRegistered = '@TempData["JustRegistered"]';
+            if (justRegistered === 'True') {
+                container.classList.remove("right-panel-active");
+                alert("✅ Account created successfully! Please sign in.");
+            }
+            else 
+            {
+            // 👇 السطر ده يخلي الصفحة تبدأ بوضع التسجيل
+            container.classList.add("right-panel-active");
+            }
+        });
+    </script>
+}

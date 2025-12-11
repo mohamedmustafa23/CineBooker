@@ -1,0 +1,296 @@
+﻿@model CineBooker.ViewModels.UserProfileVM
+@{
+    ViewData["Title"] = "My Profile";
+    var defaultAvatar = $"https://ui-avatars.com/api/?name={Model.FirstName}+{Model.LastName}&background=random&size=128";
+    var imgSrc = !string.IsNullOrEmpty(Model.ProfilePictureUrl) ? Model.ProfilePictureUrl : defaultAvatar;
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="position-relative d-inline-block mb-3">
+                        <img src="@imgSrc" alt="Profile" class="rounded-circle" width="128" height="128" style="object-fit: cover;">
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                            Active
+                        </span>
+                    </div>
+                    <h5 class="mb-1">@Model.FirstName @Model.LastName</h5>
+                    <p class="text-muted mb-3">@Model.Email</p>
+                    <div class="d-flex justify-content-around mb-3">
+                        <div>
+                            <h6 class="mb-0">@Model.Bookings.Count</h6>
+                            <small class="text-muted">Bookings</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#overview">
+                        <i class="fas fa-user me-2"></i>Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#edit">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#bookings">
+                        <i class="fas fa-ticket-alt me-2"></i>My Bookings
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Personal Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1">Full Name</label>
+                                    <p class="fw-bold">@Model.FirstName @Model.LastName</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1">Email</label>
+                                    <p class="fw-bold">@Model.Email</p>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1">Phone</label>
+                                    <p class="fw-bold">@(string.IsNullOrEmpty(Model.PhoneNumber) ? "Not Set" : Model.PhoneNumber)</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1">Date of Birth</label>
+                                    <p class="fw-bold">@(Model.DateOfBirth?.ToString("MMM dd, yyyy") ?? "Not Set")</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <label class="text-muted mb-1">Address</label>
+                                    <p class="fw-bold">@(string.IsNullOrEmpty(Model.Address) ? "Not Set" : Model.Address)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Profile Tab -->
+                <div class="tab-pane fade" id="edit" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-edit me-2"></i>Edit Profile
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form class="needs-custom-validation" asp-action="Update" asp-controller="Profile" asp-area="Identity" method="post" enctype="multipart/form-data">
+                                @Html.AntiForgeryToken()
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="FirstName" class="form-label">First Name</label>
+                                            <input asp-for="FirstName" class="form-control" />
+                                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="LastName" class="form-label">Last Name</label>
+                                            <input asp-for="LastName" class="form-control" />
+                                            <span asp-validation-for="LastName" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                                            <input asp-for="PhoneNumber" class="form-control" />
+                                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+                                            <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Gender" class="form-label">Gender</label>
+                                            <select asp-for="Gender" class="form-control">
+                                                <option value="">Select Gender</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                            </select>
+                                            <span asp-validation-for="Gender" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Address" class="form-label">Address</label>
+                                            <input asp-for="Address" class="form-control" />
+                                            <span asp-validation-for="Address" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="ProfilePictureFile" class="form-label">Update Profile Picture</label>
+                                    <input asp-for="ProfilePictureFile" type="file" class="form-control" accept="image/*" />
+                                    <small class="text-muted">Allowed formats: JPG, PNG. Max size: 2MB.</small>
+                                    <span asp-validation-for="ProfilePictureFile" class="text-danger"></span>
+                                </div>
+
+                                <div class="text-end mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings Tab -->
+                <div class="tab-pane fade" id="bookings" role="tabpanel">
+
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-ticket-alt me-2"></i>Upcoming Tickets
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.UpcomingBookings.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Movie</th>
+                                                <th>Showtime</th>
+                                                <th>Seats</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var booking in Model.UpcomingBookings)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <img src="@booking.PosterUrl" class="rounded me-2" width="40" height="60" style="object-fit: cover;">
+                                                            <span class="fw-bold">@booking.MovieTitle</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex flex-column">
+                                                            <span class="fw-bold">@booking.ShowDate.ToString("MMM dd")</span>
+                                                            <small class="text-muted">@booking.ShowDate.ToString("hh:mm tt")</small>
+                                                        </div>
+                                                    </td>
+                                                    <td>@booking.CinemaName</td>
+                                                    <td>
+                                                        <a href="@Url.Action("Details", "Booking", new { area = "Customer", id = booking.BookingId })"
+                                                           class="btn btn-sm btn-success fw-bold">
+                                                            <i class="fas fa-qrcode me-1"></i> View Ticket
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-3 text-muted">
+                                    <small>No upcoming shows. Book a ticket now!</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0 text-muted">
+                                <i class="fas fa-history me-2"></i>Booking History
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.PastBookings.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm text-muted">
+                                        <thead>
+                                            <tr>
+                                                <th>Movie</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Details</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var booking in Model.PastBookings)
+                                            {
+                                                <tr>
+                                                    <td>@booking.MovieTitle</td>
+                                                    <td>@booking.ShowDate.ToString("MMM dd, yyyy")</td>
+                                                    <td>
+                                                        @if (booking.Status == "Approved")
+                                                        {
+                                                            <span class="badge bg-secondary">Completed</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger">@booking.Status</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <a href="@Url.Action("Details", "Booking", new { area = "Customer", id = booking.BookingId })"
+                                                           class="btn btn-sm btn-link text-decoration-none">
+                                                            Receipt
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-center text-muted my-3">No booking history found.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

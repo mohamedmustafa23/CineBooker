@@ -1,0 +1,193 @@
+﻿@model Movie
+@{
+    ViewData["Title"] = @Model.Title + " - Details";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-film me-2"></i>Movie Details</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column -->
+    <div class="col-lg-4">
+        <!-- Poster Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body text-center">
+                <img src="@Model.PosterUrl"
+                     alt="@Model.Title"
+                     class="movie-poster mb-3 rounded"
+                     style="max-width: 100%; height: auto; object-fit: cover;"
+                     onerror="this.src='https://via.placeholder.com/300x450?text=No+Poster'">
+
+                <div class="d-flex justify-content-center flex-wrap gap-2 mb-3">
+                    @if (Model.MovieGenres != null && Model.MovieGenres.Any())
+                    {
+                        foreach (var item in Model.MovieGenres)
+                        {
+                            <span class="badge bg-primary bg-opacity-75">@item.Genre.Name</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted small">No Genres</span>
+                    }
+                </div>
+
+                <!-- Rating Section -->
+                <div class="rating-stars mb-2">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Model.AverageRating)
+                        {
+                            <i class="bi bi-star-fill text-warning"></i>
+                        }
+                        else if ((i - 0.5m) <= Model.AverageRating)
+                        {
+                            <i class="bi bi-star-half text-warning"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-star text-muted"></i>
+                        }
+                    }
+                    <span class="ms-2 fw-bold">@string.Format("{0:0.0}", Model.AverageRating) / 5</span>
+                </div>
+                <small class="text-muted">Rating based on system reviews</small>
+            </div>
+        </div>
+
+        <!-- Statistics Card (Static Data for UI Demo) -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <i class="bi bi-bar-chart me-2"></i>Statistics
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Total Bookings</span>
+                    <span class="fw-bold">--</span> <!-- Placeholder -->
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Total Revenue</span>
+                    <span class="fw-bold text-success">$0.00</span> <!-- Placeholder -->
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Shows Scheduled</span>
+                    <span class="fw-bold">--</span> <!-- Placeholder -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-8">
+        <!-- Movie Info Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="h5 mb-0"><i class="bi bi-info-circle me-2"></i>Movie Information</span>
+
+                <!-- Status Badge Logic -->
+                <span class="status-badge px-3 py-1 border rounded-pill @(Model.IsActive ? "bg-success bg-opacity-10 border-success text-success" : "bg-secondary bg-opacity-10 border-secondary text-secondary")">
+                    <span class="status-dot @(Model.IsActive ? "bg-success" : "bg-secondary") rounded-circle d-inline-block me-1" style="width: 8px; height: 8px;"></span>
+                    @(Model.IsActive ? "Active" : "Inactive")
+                </span>
+            </div>
+            <div class="card-body">
+                <h2 class="mb-1">@Model.Title</h2>
+                <p class="text-muted mb-4">Directed by <span class="text-dark fw-semibold">@Model.Director</span></p>
+
+                <div class="row mb-4 p-3 rounded mx-0">
+                    <div class="col-md-3 col-6 mb-3 mb-md-0 border-end">
+                        <small class="text-muted d-block text-uppercase" style="font-size: 0.75rem;">Duration</small>
+                        <span class="fw-bold"><i class="bi bi-clock me-1 text-primary"></i>@Model.DurationInMinutes min</span>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3 mb-md-0 border-end">
+                        <small class="text-muted d-block text-uppercase" style="font-size: 0.75rem;">Language</small>
+                        <span class="fw-bold"><i class="bi bi-translate me-1 text-primary"></i>@Model.Language</span>
+                    </div>
+                    <div class="col-md-3 col-6 border-end">
+                        <small class="text-muted d-block text-uppercase" style="font-size: 0.75rem;">Release Date</small>
+                        <span class="fw-bold"><i class="bi bi-calendar me-1 text-primary"></i>@Model.ReleaseDate?.ToString("MMM dd, yyyy")</span>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <small class="text-muted d-block text-uppercase" style="font-size: 0.75rem;">Rating</small>
+                        <span class="badge bg-warning text-dark border border-warning">@Model.Rating</span>
+                    </div>
+                </div>
+
+                <h5 class="mb-3">Synopsis</h5>
+                <p class="text-muted" style="line-height: 1.8;">
+                    @Model.Description
+                </p>
+
+                @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+                {
+                    <h5 class="mb-3 mt-4">Trailer</h5>
+                    <div class="ratio ratio-16x9 mb-3 rounded overflow-hidden shadow-sm">
+                        <iframe src="@Model.TrailerUrl.Replace("watch?v=", "embed/")"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen></iframe>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Cast Card -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <i class="bi bi-people me-2"></i>Cast
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @if (Model.MovieActors != null && Model.MovieActors.Any())
+                    {
+                        foreach (var item in Model.MovieActors)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center p-2 border rounded hover-bg-light">
+                                    <img src="@(string.IsNullOrEmpty(item.Actor.PhotoUrl) ? $"https://ui-avatars.com/api/?name={item.Actor.Name}&size=60" : item.Actor.PhotoUrl)"
+                                         class="rounded-circle me-3 border"
+                                         style="width: 50px; height: 50px; object-fit: cover;"
+                                         alt="@item.Actor.Name">
+                                    <div>
+                                        <div class="fw-bold text-primary">@item.Actor.Name</div>
+                                        <small class="text-muted">as @item.CharacterName</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12 text-center text-muted py-3">
+                            <i class="bi bi-person-x fs-3 d-block mb-2"></i>
+                            No cast information available.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Shows Card (Placeholder for now) -->
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-calendar-event me-2"></i>Upcoming Shows</span>
+            </div>
+            <div class="card-body text-center py-4">
+                <p class="text-muted mb-0">
+                    <i class="bi bi-cone-striped d-block fs-2 mb-2"></i>
+                    Shows management will be available soon.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,313 @@
+﻿@model CineBooker.ViewModels.MovieDetailsVM
+
+@{
+    ViewData["Title"] = Model.Title;
+    var bgImage = !string.IsNullOrEmpty(Model.PosterUrl) ? Model.PosterUrl : "/images/default-movie.jpg";
+}
+
+<section class="movie-hero position-relative overflow-hidden">
+
+    <div class="hero-bg" style="background-image: url('@bgImage');"></div>
+
+    <div class="hero-overlay"></div>
+
+    <div class="container py-5 position-relative" style="z-index: 2;">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")" class="text-danger text-decoration-none fw-bold shadow-text">Home</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("List", "Movie")" class="text-danger text-decoration-none fw-bold shadow-text">Movies</a>
+                </li>
+                <li class="breadcrumb-item active text-white opacity-75 shadow-text" aria-current="page">@Model.Title</li>
+            </ol>
+        </nav>
+
+        <div class="row align-items-center">
+            <!-- Poster Image -->
+            <div class="col-lg-3 col-md-4 mb-4 mb-lg-0 text-center">
+                <img src="@bgImage"
+                     class="img-fluid rounded-4 shadow-lg poster-hover border border-white border-opacity-10"
+                     alt="@Model.Title"
+                     style="width: 100%; max-width: 300px; object-fit: cover;">
+            </div>
+
+            <div class="col-lg-9 col-md-8 text-white">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge bg-danger shadow-sm">Now Showing</span>
+                </div>
+
+                <h1 class="display-3 fw-bold mb-3 shadow-text">@Model.Title</h1>
+
+                <!-- Metadata -->
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-4 text-light fw-semibold shadow-text">
+                    <div class="d-flex align-items-center text-warning">
+                        <i class="bi bi-star-fill me-1"></i>
+                        <span class="fs-5">@Model.Rating.ToString("0.0")</span>
+                        <span class="text-white-50 ms-1 small">/10</span>
+                    </div>
+                    <span>|</span>
+                    <span><i class="bi bi-clock me-1 text-danger"></i> @Model.Duration min</span>
+                    <span>|</span>
+                    <span><i class="bi bi-calendar me-1 text-danger"></i> @Model.ReleaseDate.ToString("yyyy")</span>
+                    <span>|</span>
+                    <span class="text-uppercase bg-white bg-opacity-10 px-2 rounded">@Model.Language</span>
+                </div>
+
+                <!-- Genres -->
+                <div class="mb-4">
+                    @foreach (var genre in Model.Genres)
+                    {
+                        <span class="badge glass-badge me-2 mb-2">@genre</span>
+                    }
+                </div>
+
+                <!-- Description -->
+                <p class="lead opacity-90 mb-4 shadow-text text-light" style="max-width: 800px; line-height: 1.6;">
+                    @Model.Description
+                </p>
+
+                <!-- Cast Info -->
+                <div class="row mb-4 opacity-90 small shadow-text text-light">
+                    <div class="col-md-6 mb-2">
+                        <strong class="text-danger">Director:</strong> @Model.Director
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong class="text-danger">Cast:</strong> @string.Join(", ", Model.Cast)
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-3 flex-wrap">
+                    <button onclick="scrollToShowtimes()"
+                            class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-lg hover-scale">
+                        <i class="bi bi-ticket-perforated me-2"></i>Book Tickets
+                    </button>
+
+                    @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+                    {
+                        <a href="@Model.TrailerUrl" target="_blank"
+                           class="btn btn-outline-light btn-lg rounded-pill px-4 glass-btn hover-scale text-white">
+                            <i class="bi bi-play-circle me-2"></i>Watch Trailer
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-body text-body" id="showtimes">
+    <div class="container">
+        <div class="d-flex align-items-center mb-4">
+            <h2 class="fw-bold m-0"><i class="bi bi-calendar3 text-danger me-2"></i>Select Showtime</h2>
+        </div>
+
+        <!-- Date Tabs -->
+        <div class="d-flex flex-wrap gap-2 mb-5 pb-3 border-bottom overflow-auto" style="white-space: nowrap;">
+            @foreach (var date in Model.AvailableDates)
+            {
+                string dayName = date.Date == DateTime.Today ? "Today" :
+                date.Date == DateTime.Today.AddDays(1) ? "Tomorrow" :
+                date.ToString("ddd");
+                string dateStr = date.ToString("yyyy-MM-dd");
+
+                <button class="btn btn-date-tab rounded-3 py-2 px-4 text-start position-relative"
+                        data-date="@dateStr"
+                        onclick="loadShowtimes('@dateStr', this)">
+                    <small class="d-block text-uppercase opacity-75" style="font-size: 0.7rem;">@dayName</small>
+                    <span class="fw-bold fs-5">@date.ToString("dd MMM")</span>
+                </button>
+            }
+        </div>
+
+        <!-- AJAX Container -->
+        <div id="showtimes-container" style="min-height: 200px;">
+            <div class="text-center py-5">
+                <div class="spinner-border text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstTab = document.querySelector('.btn-date-tab');
+            if(firstTab) {
+                firstTab.click();
+            }
+        });
+
+        function loadShowtimes(dateStr, btnElement) {
+            document.querySelectorAll('.btn-date-tab').forEach(btn => {
+                btn.classList.remove('active', 'btn-danger', 'text-white');
+                btn.classList.add('btn-outline-secondary'); // لون افتراضي
+            });
+
+            btnElement.classList.remove('btn-outline-secondary');
+            btnElement.classList.add('active', 'btn-danger', 'text-white');
+
+            const container = document.getElementById('showtimes-container');
+            container.style.opacity = '0.5';
+
+            var url = '@Url.Action("GetShowtimes", "Movie")' + '?movieId=' + '@Model.Id' + '&date=' + dateStr;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(html => {
+                    container.innerHTML = html;
+                    container.style.opacity = '1';
+                })
+                .catch(err => {
+                    console.error(err);
+                    container.innerHTML = `
+                        <div class="text-center py-5 text-danger">
+                            <i class="bi bi-exclamation-circle fs-1"></i>
+                            <p class="mt-2">Failed to load showtimes.</p>
+                        </div>`;
+                    container.style.opacity = '1';
+                });
+        }
+
+        function scrollToShowtimes() {
+            document.getElementById('showtimes').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+
+    <style>
+        /* === Hero Section Fixes === */
+        .movie-hero {
+            position: relative;
+            min-height: 550px; 
+            background-color: #000; 
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(15px); 
+            transform: scale(1.1); 
+            opacity: 0.6; 
+            z-index: 0;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 80%, var(--bs-body-bg) 100%);
+            z-index: 1;
+        }
+
+        .shadow-text {
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.9); 
+        }
+
+        
+        .glass-badge {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5em 1em;
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+            .glass-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+                color: white !important;
+            }
+
+        .hover-scale {
+            transition: transform 0.3s;
+        }
+
+            .hover-scale:hover {
+                transform: scale(1.05);
+            }
+
+        /* === Date Tabs Theme Fix === */
+        .btn-date-tab {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            border: 1px solid var(--bs-border-color);
+            transition: all 0.3s ease;
+        }
+
+            .btn-date-tab:hover {
+                transform: translateY(-2px);
+                border-color: var(--bs-danger);
+                background-color: var(--bs-tertiary-bg);
+            }
+
+            .btn-date-tab.active {
+                background-color: var(--bs-danger) !important;
+                color: white !important;
+                border-color: var(--bs-danger) !important;
+                box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+            }
+
+        .cinema-card-bg {
+            background-color: var(--bs-body-bg); 
+            border: 1px solid var(--bs-border-color) !important;
+        }
+
+        [data-bs-theme="dark"] .cinema-card-bg {
+            background-color: #2b3035;
+        }
+
+        [data-bs-theme="light"] .cinema-card-bg {
+            background-color: #ffffff;
+        }
+
+        .border-end-md {
+            border-right: 1px solid var(--bs-border-color) !important;
+        }
+        @@media (max-width: 768px) {
+            .border-end-md
+
+        {
+            border-right: none !important;
+            border-bottom: 1px solid var(--bs-border-color) !important;
+            padding-bottom: 1rem;
+        }
+
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+}

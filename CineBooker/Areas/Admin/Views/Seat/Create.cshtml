@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Create Seats";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-plus-lg me-2"></i>Create Seats</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-grid me-2"></i>Bulk Seat Generation
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post" class="needs-validation" novalidate>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="CinemaHallId" name="CinemaHallId" required>
+                                    <option value="">Select Hall</option>
+                                    <option value="1">AMC Empire 25 - Hall A (IMAX)</option>
+                                    <option value="2">AMC Empire 25 - Hall B</option>
+                                    <option value="3">AMC Empire 25 - Hall C</option>
+                                    <option value="4">Cinemark Century - Hall 1</option>
+                                </select>
+                                <label for="CinemaHallId">Cinema Hall *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="SeatType" name="SeatType" required>
+                                    <option value="Standard">Standard</option>
+                                    <option value="Premium">Premium</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="Wheelchair">Wheelchair Accessible</option>
+                                </select>
+                                <label for="SeatType">Seat Type *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="RowLabel" name="RowLabel" placeholder="Row" value="A" required>
+                                <label for="RowLabel">Row Label (e.g., A, B, C) *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="StartNumber" name="StartNumber" value="1" min="1" required>
+                                <label for="StartNumber">Start Number *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="EndNumber" name="EndNumber" value="20" min="1" required>
+                                <label for="EndNumber">End Number *</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="BasePrice" name="BasePrice" value="15.00" step="0.01" min="0" required>
+                        <label for="BasePrice">Base Price ($) *</label>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        This will create <strong>20 seats</strong> in row <strong>A</strong> (A1 through A20) with a base price of <strong>$15.00</strong>.
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg me-1"></i>Generate Seats
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-lightbulb me-2"></i>Tips
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li class="mb-2">Use alphabetical row labels (A, B, C...)</li>
+                    <li class="mb-2">Standard seats are regular pricing</li>
+                    <li class="mb-2">Premium seats typically have +$5 markup</li>
+                    <li class="mb-2">VIP seats typically have +$10 markup</li>
+                    <li>You can create seats row by row</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cash me-2"></i>Pricing Guide
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Standard</span>
+                        <span class="badge bg-secondary">$12 - $15</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Premium</span>
+                        <span class="badge bg-primary">$18 - $22</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>VIP</span>
+                        <span class="badge bg-warning text-dark">$25 - $35</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

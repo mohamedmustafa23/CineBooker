@@ -1,0 +1,232 @@
+﻿@model IEnumerable<Cinema>
+
+@{
+    ViewData["Title"] = "Cinemas List";
+    var cities = ViewBag.Cities as List<string>;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-building me-2"></i>Cinemas Management</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Cinema
+    </a>
+</div>
+
+<div class="row">
+    <!-- Left Column: Cinema List -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 data-table">
+                        <thead>
+                            <tr>
+                                <th>Cinema</th>
+                                <th>Address</th>
+                                <th>Halls</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var cinema in Model)
+                                {
+
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold text-primary">@cinema.Name</div>
+                                        </td>
+                                        <td>
+                                            @if (cinema.Address != null)
+                                            {
+                                                <small class="text-muted">@cinema.Address.City</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">No Address</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info bg-opacity-10 text-info border border-info">
+                                                @(cinema.CinemaHalls?.Count ?? 0) halls
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group">
+                                                <a asp-action="Details" asp-route-id="@cinema.Id" class="btn btn-sm btn-outline-info" title="View">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a asp-action="Edit" asp-route-id="@cinema.Id" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-danger" 
+                                                        onclick="confirmDelete(@cinema.Id, '@cinema.Name')"
+                                                        title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                            <form id="delete-form-@cinema.Id" asp-action="Delete" asp-route-id="@cinema.Id" method="post" style="display:none"></form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        No cinemas found matching your criteria.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm sticky-top" style="top: 1rem; z-index: 1;">
+            <div class="card-header">
+                <i class="bi bi-diagram-3 me-2"></i>Cinema Structure
+            </div>
+            <div class="card-body" style="max-height: 80vh; overflow-y: auto;">
+                <div class="tree-view">
+                    @if (Model != null && Model.Any())
+                    {
+                        <ul>
+                            @foreach (var cinema in Model)
+                            {
+                                <li>
+                                    <div class="tree-node collapsed" onclick="this.classList.toggle('collapsed')">
+                                        <span class="tree-toggle"><i class="bi bi-chevron-down"></i></span>
+                                        <i class="bi bi-building text-primary me-2"></i>
+                                        <span class="fw-semibold">@cinema.Name</span>
+                                        <span class="badge bg-secondary ms-auto rounded-pill">@(cinema.CinemaHalls?.Count ?? 0)</span>
+                                    </div>
+                                    
+                                    @if (cinema.CinemaHalls != null && cinema.CinemaHalls.Any())
+                                    {
+                                        <ul>
+                                            @foreach (var hall in cinema.CinemaHalls)
+                                            {
+                                                var seatCount = hall.Seats?.Count ?? 0;
+                                                <li>
+                                                    <div class="tree-node collapsed" onclick="event.stopPropagation(); this.classList.toggle('collapsed')">
+                                                        <span class="tree-toggle"><i class="bi bi-chevron-right" style="font-size: 0.8em;"></i></span>
+                                                        <i class="bi bi-door-open text-success me-2"></i>
+                                                        <span>@hall.Name</span>
+                                                        <span class="badge bg-light text-dark border ms-auto">@seatCount seats</span>
+                                                    </div>
+                                                    <ul>
+                                                        <li>
+                                                            <div class="tree-node ps-4 cursor-default">
+                                                                <small class="text-muted"><i class="bi bi-grid-3x3 me-1"></i>Configuration details...</small>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                    else
+                                    {
+                                        <ul>
+                                            <li><div class="tree-node ps-4 text-muted"><small>No halls added yet</small></div></li>
+                                        </ul>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-3">No structure data</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Delete Cinema?',
+                text: `Are you sure you want to delete "${name}"? This will also delete all associated halls and seats!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`delete-form-${id}`).submit();
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    .tree-view ul {
+        list-style-type: none;
+        padding-left: 20px;
+        margin: 0;
+    }
+
+    .tree-view > ul {
+        padding-left: 0;
+    }
+
+    .tree-node {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        margin-bottom: 2px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .tree-node:hover {
+        background-color: #f8f9fa;
+        border-color: #e9ecef;
+    }
+    
+    .tree-node.cursor-default {
+        cursor: default;
+    }
+
+    .tree-toggle {
+        width: 20px;
+        display: inline-block;
+        text-align: center;
+        margin-right: 5px;
+        color: #adb5bd;
+        transition: transform 0.2s;
+    }
+
+    /* Logic for collapsing/expanding */
+    /* When collapsed, hide the nested UL */
+    .tree-node.collapsed + ul {
+        display: none;
+    }
+    
+    /* Rotate arrow when collapsed */
+    .tree-node.collapsed .tree-toggle i {
+        transform: rotate(-90deg);
+    }
+    
+    /* Specific adjustment for chevron icons */
+    .bi-chevron-down {
+        display: inline-block;
+    }
+</style>

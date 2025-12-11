@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Edit Genre";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-pencil-square me-2"></i>Edit Genre</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-tags me-2"></i>Genre Information
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" class="needs-validation" novalidate>
+                    <input type="hidden" name="Id" value="1" />
+                    
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="Name" name="Name" value="Action" placeholder="Genre Name" required>
+                        <label for="Name">Genre Name *</label>
+                        <div class="invalid-feedback">Please enter a genre name.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="Description" name="Description" placeholder="Description" style="height: 100px">High-energy films featuring physical feats and chases</textarea>
+                        <label for="Description">Description</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="IconClass" name="IconClass">
+                            <option value="bi-film">Film</option>
+                            <option value="bi-lightning" selected>Action</option>
+                            <option value="bi-heart">Romance</option>
+                            <option value="bi-emoji-laughing">Comedy</option>
+                            <option value="bi-moon-stars">Horror</option>
+                            <option value="bi-rocket">Sci-Fi</option>
+                            <option value="bi-book">Drama</option>
+                            <option value="bi-globe">Adventure</option>
+                        </select>
+                        <label for="IconClass">Icon</label>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" id="IsActive" name="IsActive" value="true" checked>
+                        <label class="form-check-label" for="IsActive">Active</label>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Movies in Genre</span>
+                        <span class="badge bg-primary">24 movies</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg me-1"></i>Save Changes
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

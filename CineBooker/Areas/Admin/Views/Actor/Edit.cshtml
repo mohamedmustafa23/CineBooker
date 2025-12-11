@@ -1,0 +1,113 @@
+@model Actor
+@{
+    ViewData["Title"] = "Edit Actor";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-pencil-square me-2"></i>Edit Actor</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <input type="hidden" name="Id" value="@Model.Id" />
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>Actor Information
+                </div>
+                <div class="card-body">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="Name" name="Name" value="@Model.Name" placeholder="Actor Name" required>
+                        <label for="Name">Full Name *</label>
+                        <div class="invalid-feedback">Please enter actor's name.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="Gender" name="Gender" required>
+                            @if (Model.Gender == "Male")
+                            {
+                                <option value="">Select Gender</option>
+                                <option value="Male" selected>Male</option>
+                                <option value="Female">Female</option>
+                            }
+                            else
+                            {
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female" selected>Female</option>
+                            }
+                        </select>
+                        <label for="Gender">Gender *</label>
+                        <div class="invalid-feedback">Please select a gender.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="Bio" name="Bio" placeholder="Biography" style="height: 150px">@Model.Bio</textarea>
+                        <label for="Bio">Biography</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-film me-2"></i>Filmography
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Movie</th>
+                                    <th>Character</th>
+                                    <th>Year</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var film in Model.MovieActors)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="@film.Movie.PosterUrl" class="rounded me-2" alt="Poster" style="width: 60px; height: 90px; object-fit: cover;">
+                                                <span>@film.Movie.Title</span>
+                                            </div>
+                                        </td>
+                                        <td>@film.Actor</td>
+                                        <td>@film.Movie.ReleaseDate</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-image me-2"></i>Photo
+                </div>
+                <div class="card-body">
+                    <div class="image-upload-preview mb-3" id="photoPreview" data-input="#PhotoFile" style="height: 200px; max-width: 200px;">
+                        <img src="@Model.PhotoUrl" alt="Current Photo">
+                    </div>
+                    <input type="file" class="form-control image-upload-input" id="img" name="img" accept="image/*" data-preview="#photoPreview" hidden>
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="document.getElementById('img').click()">
+                        <i class="bi bi-upload me-1"></i>Change Photo
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Save Changes
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,166 @@
+@model IEnumerable<Movie>
+@{
+    ViewData["Title"] = "Movies";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-camera-reels me-2"></i>Movies</h1>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Movie
+    </a>
+</div>
+
+<div class="filter-card">
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <div class="form-floating">
+                <input type="text"
+                       class="form-control"
+                       id="searchTitle"
+                       name="search"
+                       placeholder="Search movies..."
+                       value="@Context.Request.Query["search"]">
+                <label for="searchTitle">Search by Title</label>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="form-floating">
+                <select class="form-select" id="filterGenre" name="genre">
+                    <option value="">All Genres</option>
+                    <option value="1">Action</option>
+                    <option value="2">Drama</option>
+                    <option value="3">Comedy</option>
+                    <option value="4">Sci-Fi</option>
+                    <option value="5">Horror</option>
+                    <option value="6">Romance</option>
+                </select>
+                <label for="filterGenre">Genre</label>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="form-floating">
+                <select class="form-select" id="filterRating" name="rating">
+                    <option value="">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                    <option value="2">2+ Stars</option>
+                    <option value="1">1+ Star</option>
+                </select>
+                <label for="filterRating">Rating</label>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="form-floating">
+                <select class="form-select" id="filterStatus" name="status">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <label for="filterStatus">Status</label>
+            </div>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-center gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search me-1"></i>Filter
+            </button>
+            <a href="/Movie" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover data-table">
+                <thead>
+                    <tr>
+                        <th>Poster</th>
+                        <th>Title</th>
+                        <th>Genre</th>
+                        <th>Duration</th>
+                        <th>Rating</th>
+                        <th>Release Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var movie in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@movie.PosterUrl"
+                                     class="movie-poster-sm"
+                                     alt="Poster"
+                                     onclick="showImagePreview(this.src)">
+                            </td>
+
+                            <td>
+                                <div class="fw-semibold">@movie.Title</div>
+                            </td>
+
+                            <td>
+                                @foreach (var genre in movie.MovieGenres)
+                                {
+                                    <span class="badge bg-primary">@genre.Genre.Name</span>
+                                }
+                            </td>
+
+                            <td>@movie.DurationInMinutes min</td>
+
+                            <td>
+                                <span class="rating-stars">
+                                    <i class="bi bi-star-fill"></i>
+                                </span>
+                                @string.Format("{0:0.0}", movie.AverageRating)
+                            </td>
+
+                            <td>@movie.ReleaseDate</td>
+
+                            <td>
+                                <span class="status-badge">
+                                    <span class="status-dot @(movie.IsActive ? "active" : "inactive")"></span>
+                                    @(movie.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <a asp-action="Details"
+                                   asp-route-id="@movie.Id"
+                                   class="btn btn-sm btn-outline-info btn-action"
+                                   data-bs-toggle="tooltip"
+                                   title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                <a asp-action="Edit"
+                                   asp-route-id="@movie.Id"
+                                   class="btn btn-sm btn-outline-primary btn-action"
+                                   data-bs-toggle="tooltip"
+                                   title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-action"
+                                        data-delete-url="/Admin/Movie/Delete/@movie.Id"
+                                        data-delete-name="@movie.Title"
+                                        data-bs-toggle="tooltip"
+                                        title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

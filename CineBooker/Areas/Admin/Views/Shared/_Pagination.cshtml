@@ -1,0 +1,35 @@
+@model dynamic
+
+@{
+    int currentPage = Model.CurrentPage ?? 1;
+    int totalPages = Model.TotalPages ?? 1;
+    int totalItems = Model.TotalItems ?? 0;
+    int pageSize = Model.PageSize ?? 10;
+    string baseUrl = Model.BaseUrl ?? "";
+}
+
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <div class="text-muted">
+        Showing @(((currentPage - 1) * pageSize) + 1) to @Math.Min(currentPage * pageSize, totalItems) of @totalItems entries
+    </div>
+    <nav aria-label="Page navigation">
+        <ul class="pagination mb-0">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="@baseUrl?page=@(currentPage - 1)" aria-label="Previous">
+                    <span aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
+                </a>
+            </li>
+            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="@baseUrl?page=@i">@i</a>
+                </li>
+            }
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link" href="@baseUrl?page=@(currentPage + 1)" aria-label="Next">
+                    <span aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>

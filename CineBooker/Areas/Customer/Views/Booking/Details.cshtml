@@ -1,0 +1,276 @@
+﻿@using CineBooker.Enums
+@model CineBooker.Models.Booking
+
+@{
+    ViewData["Title"] = "My Ticket";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml"; 
+
+    var movie = Model.Show.Movie;
+    var cinema = Model.Show.CinemaHall.Cinema;
+    var hall = Model.Show.CinemaHall;
+
+    var qrContent = $"BookingID:{Model.Id}-Conf:{Model.ConfirmationNumber}";
+    var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={qrContent}";
+}
+
+<div class="container py-5">
+
+    <!-- Header Message based on Status -->
+    <div class="row justify-content-center mb-4 no-print">
+        <div class="col-md-8 text-center">
+            @if (Model.StatusOfPayment == PaymentStatus.Approved)
+            {
+                <div class="animate__animated animate__fadeInDown">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h2 class="fw-bold mt-2">Your Ticket is Ready!</h2>
+                    <p class="text-muted">Please save this ticket or print it to show at the cinema entrance.</p>
+                </div>
+            }
+            else if (Model.StatusOfPayment == PaymentStatus.Pending)
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Payment is still pending.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle-fill me-2"></i> This booking has been cancelled or rejected.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- The Ticket Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+            <div class="ticket-card shadow-lg">
+                <div class="ticket-visual" style="background-image: url('@movie.PosterUrl');">
+                    <div class="visual-overlay"></div>
+                    <div class="visual-content">
+                        <h2 class="text-white fw-bold text-shadow">@movie.Title</h2>
+                    </div>
+                </div>
+
+                <div class="ticket-info">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-uppercase">@cinema.Name</h5>
+                            <small class="text-muted">@hall.Name</small>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Booking ID</small>
+                            <span class="font-monospace fs-5 fw-bold">#@Model.Id</span>
+                        </div>
+                    </div>
+
+                    <!-- Dashed Line -->
+                    <div class="ticket-divider my-3"></div>
+
+                    <div class="row g-3">
+                        <div class="col-6 col-sm-4">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Date</small>
+                            <p class="fs-5 fw-bold mb-0">@Model.Show.StartTime.ToString("dd MMM")</p>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Time</small>
+                            <p class="fs-5 fw-bold mb-0">@Model.Show.StartTime.ToString("hh:mm tt")</p>
+                        </div>
+                        <div class="col-12 col-sm-4">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Total Paid</small>
+                            <p class="fs-5 fw-bold text-success mb-0">$@Model.Amount</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Seats (@Model.NumberOfSeats)</small>
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            @foreach (var seat in Model.BookingSeats)
+                            {
+                                var seatLabel = $"{(char)(seat.ShowSeat.Seat.SeatRow + 64)}{seat.ShowSeat.Seat.SeatCol}";
+                                <span class="badge bg-dark fs-6 px-3 py-2">@seatLabel</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Footer: QR & Confirmation -->
+                    <div class="ticket-footer mt-4 pt-3 border-top d-flex align-items-center justify-content-between">
+                        <div>
+                            <small class="text-muted d-block mb-1">Confirmation Code</small>
+                            <h4 class="font-monospace text-primary fw-bold mb-0">@Model.ConfirmationNumber</h4>
+                        </div>
+                        <div class="qr-box p-1 bg-white border rounded">
+                            <!-- QR Code API -->
+                            <img src="@qrCodeUrl" alt="QR Code" width="80" height="80">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-5 no-print">
+                <button onclick="window.print()" class="btn btn-outline-dark btn-lg me-3">
+                    <i class="bi bi-printer me-2"></i> Print Ticket
+                </button>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="bi bi-house me-2"></i> Back Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        /* CSS Variables */
+        :root {
+            --ticket-radius: 16px;
+        }
+
+        /* Ticket Card Layout */
+        .ticket-card {
+            display: flex;
+            background-color: var(--ticket-bg);
+            border-radius: var(--ticket-radius);
+            overflow: hidden;
+            min-height: 350px;
+        }
+
+        /* Left Side (Visual) */
+        .ticket-visual {
+            width: 35%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+        }
+
+            .ticket-visual::after {
+                content: '';
+                position: absolute;
+                right: -10px;
+                top: 0;
+                bottom: 0;
+                width: 20px;
+                background-image: radial-gradient(circle at center, transparent 0, transparent 4px, var(--ticket-bg) 5px);
+                background-size: 10px 15px;
+                background-repeat: repeat-y;
+                z-index: 2;
+            }
+
+        .visual-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        }
+
+        .visual-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* Right Side (Info) */
+        .ticket-info {
+            flex: 1;
+            padding: 30px;
+            position: relative;
+        }
+
+        /* Dotted Line Divider */
+        .ticket-divider {
+            border-top: 2px dashed #e9ecef;
+            position: relative;
+        }
+
+            /* Semi-circles for ticket holes effect */
+            .ticket-divider::before, .ticket-divider::after {
+                content: '';
+                position: absolute;
+                top: -10px;
+                width: 20px;
+                height: 20px;
+                background-color: var(--bs-body-bg); /* Match body background */
+                border-radius: 50%;
+            }
+
+            .ticket-divider::before {
+                left: -40px;
+            }
+
+            .ticket-divider::after {
+                right: -40px;
+            }
+
+        /* Mobile Responsive */
+        @@media (max-width: 768px) {
+            .ticket-card {
+                flex-direction: column;
+            }
+
+            .ticket-visual {
+                width: 100%;
+                height: 200px;
+            }
+
+                .ticket-visual::after {
+                    display: none; /* Remove vertical dots on mobile */
+                }
+
+            .ticket-info {
+                padding: 20px;
+            }
+            /* Change dots to horizontal for mobile if needed, or hide */
+            .ticket-divider::before, .ticket-divider::after {
+                display: none;
+            }
+        }
+
+        /* Print Styles */
+        @@media print {
+            .no-print, header, footer, nav {
+                display: none !important;
+            }
+
+            body {
+                background: #fff !important;
+                color: #000 !important;
+                visibility: hidden; /* Hide everything first */
+            }
+
+            .container, .ticket-card, .ticket-card * {
+                visibility: visible; /* Show only ticket */
+            }
+
+            .ticket-card {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: 2px solid #000;
+                box-shadow: none !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .badge {
+                border: 1px solid #000;
+                color: #000 !important;
+                background: transparent !important;
+            }
+            /* Adjust hole color for white paper */
+            .ticket-divider::before, .ticket-divider::after {
+                background-color: #fff;
+            }
+        }
+    </style>
+}

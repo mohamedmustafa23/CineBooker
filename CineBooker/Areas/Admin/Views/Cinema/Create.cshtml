@@ -1,0 +1,96 @@
+@model CinemaVM
+@{
+    ViewData["Title"] = "Create Cinema";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-plus-circle me-2"></i>Create Cinema</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-building me-2"></i>Cinema Information
+                </div>
+                <div class="card-body">
+                    <div class="form-floating mb-3">
+                        <input asp-for="Cinema.Name" class="form-control" placeholder="Cinema Name" required>
+                        <label asp-for="Cinema.Name">Cinema Name *</label>
+                        <span asp-validation-for="Cinema.Name" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="Cinema.AddressLine" class="form-control" placeholder="Address Line" required>
+                        <label asp-for="Cinema.AddressLine">Address Line *</label>
+                        <span asp-validation-for="Cinema.AddressLine" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <select asp-for="SelectedAddressId" asp-items="@Model.AddressList" class="form-select" required>
+                            <option disabled selected>-- Select an Address --</option>
+                        </select>
+                        <label asp-for="SelectedAddressId">Location / Address *</label>
+                        <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar (Initial Halls) -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-image me-2"></i>Photo
+                </div>
+                <div class="card-body">
+                    <div class="image-upload-preview mb-3" id="photoPreview" data-input="#PhotoFile" style="height: 200px; max-width: 200px;">
+                        <div class="upload-placeholder">
+                            <i class="bi bi-person-bounding-box"></i>
+                            <div>Click to upload</div>
+                            <small class="text-muted">JPG, PNG (Max 5MB)</small>
+                        </div>
+                    </div>
+                    <input type="file" class="form-control image-upload-input" id="PhotoFile" asp-for="CinemaLogo" accept="image/*" data-preview="#photoPreview" hidden>
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="document.getElementById('PhotoFile').click()">
+                        <i class="bi bi-upload me-1"></i>Choose Photo
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Create Cinema
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function previewImage(input) {
+            var container = document.getElementById('imagePreviewContainer');
+            var preview = document.getElementById('preview');
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = '#';
+                container.style.display = 'none';
+            }
+        }
+    </script>
+}

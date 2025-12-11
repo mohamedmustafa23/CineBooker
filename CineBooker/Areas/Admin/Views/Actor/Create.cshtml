@@ -1,0 +1,72 @@
+@{
+    ViewData["Title"] = "Create Actor";
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-person-plus me-2"></i>Create Actor</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-info-circle me-2"></i>Actor Information
+                </div>
+                <div class="card-body">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="Name" name="Name" placeholder="Actor Name" required>
+                        <label for="Name">Full Name *</label>
+                        <div class="invalid-feedback">Please enter actor's name.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="Gender" name="Gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                        <label for="Gender">Gender *</label>
+                        <div class="invalid-feedback">Please select a gender.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="Bio" name="Bio" placeholder="Biography" style="height: 150px"></textarea>
+                        <label for="Bio">Biography</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-image me-2"></i>Photo
+                </div>
+                <div class="card-body">
+                    <div class="image-upload-preview mb-3" id="photoPreview" data-input="#PhotoFile" style="height: 200px; max-width: 200px;">
+                        <div class="upload-placeholder">
+                            <i class="bi bi-person-bounding-box"></i>
+                            <div>Click to upload</div>
+                            <small class="text-muted">JPG, PNG (Max 5MB)</small>
+                        </div>
+                    </div>
+                    <input type="file" class="form-control image-upload-input" id="img" name="img" accept="image/*" data-preview="#photoPreview" hidden>
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="document.getElementById('img').click()">
+                        <i class="bi bi-upload me-1"></i>Choose Photo
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-lg me-1"></i>Create Actor
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>

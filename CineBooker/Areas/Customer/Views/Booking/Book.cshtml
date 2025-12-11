@@ -1,0 +1,202 @@
+﻿@model BookTicketVM
+@{
+    ViewData["Title"] = "Select Seats";
+}
+
+<div class="container py-5 fade-in">
+    <div class="row g-4">
+
+        <!-- ================= LEFT: SEAT MAP ================= -->
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Select Seats</h2>
+                    <p class="text-muted mb-0">@Model.CinemaName <span class="mx-2">•</span> @Model.HallName</p>
+                </div>
+            </div>
+
+            <!-- Screen Visual -->
+            <div class="screen-container">
+                <div class="screen"></div>
+                <small class="text-uppercase fw-bold text-muted" style="letter-spacing: 3px; font-size: 0.7rem;">Screen</small>
+            </div>
+
+            <!-- Grid Container -->
+            <div class="text-center mb-5">
+                <div class="seat-grid-wrapper">
+                    <div class="seat-grid">
+                        @foreach (var seat in Model.Seats)
+                        {
+                            var statusClass = seat.Status == SeatStatus.Available ? "seat-avail" : "disabled";
+
+                            <div class="seat-item @statusClass"
+                                 data-id="@seat.ShowSeatId"
+                                 data-price="@seat.Price"
+                                 title="@seat.SeatName - $@seat.Price">
+                                @(seat.Status == SeatStatus.Available ? seat.SeatName : "")
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="d-flex justify-content-center gap-4 text-muted small">
+                <div class="d-flex align-items-center">
+                    <span class="legend-dot" style="background: var(--seat-avail-bg);"></span> Available
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="legend-dot" style="background: var(--primary-color); box-shadow: 0 0 10px rgba(229, 9, 20, 0.4);"></span> Selected
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="legend-dot" style="background: var(--seat-booked-bg);"></span> Booked
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= RIGHT: SUMMARY (STICKY) ================= -->
+        <div class="col-lg-4">
+            <div class="booking-summary-wrapper">
+                <div class="card summary-card p-4">
+                    <!-- Movie Header -->
+                    <div class="d-flex gap-3 mb-4">
+                        <img src="@Model.PosterUrl" class="rounded shadow-sm" style="width: 80px; height: 120px; object-fit: cover;">
+                        <div>
+                            <h5 class="fw-bold mb-1">@Model.MovieTitle</h5>
+                            <div class="d-flex flex-column gap-1 mt-2">
+                                <span class="badge bg-secondary w-auto align-self-start">@Model.ShowDate.ToString("MMM dd")</span>
+                                <span class="text-muted small"><i class="bi bi-clock me-1"></i> @Model.ShowDate.ToString("hh:mm tt")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="opacity-25 my-3">
+
+                    <!-- Selected Seats -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small fw-bold text-uppercase">Selected Seats</span>
+                            <span class="badge bg-light text-dark border" id="seatsCountBadge">0</span>
+                        </div>
+                        <div id="selectedSeatsContainer" class="d-flex flex-wrap gap-2" style="min-height: 40px;">
+                            <span class="text-muted small fst-italic w-100 text-center py-2" id="emptyMsg">Select seats to proceed</span>
+                        </div>
+                    </div>
+
+                    <!-- Pricing -->
+                    <div class="d-flex justify-content-between align-items-end mb-4 p-3 rounded" style="background-color: rgba(0,0,0,0.03);">
+                        <span class="text-muted">Total Price</span>
+                        <span class="fs-2 fw-bold text-primary" id="totalPrice">$0.00</span>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button id="btnBook" class="btn btn-primary w-100 py-3 rounded-pill shadow-lg" disabled>
+                        Confirm Booking <i class="bi bi-chevron-right ms-2"></i>
+                    </button>
+
+                    <p class="text-center text-muted mt-3" style="font-size: 0.7rem;">
+                        <i class="bi bi-shield-lock me-1"></i> Secure Payment
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const isUserAuthenticated = @(User.Identity.IsAuthenticated.ToString().ToLower());
+        let selectedSeats = [];
+
+        $('.seat-avail').click(function() {
+            let item = $(this);
+            let id = item.data('id');
+            let name = item.text().trim();
+
+            if (item.hasClass('selected')) {
+                item.removeClass('selected');
+                selectedSeats = selectedSeats.filter(s => s !== id);
+                removeBadge(id);
+            } else {
+                item.addClass('selected');
+                selectedSeats.push(id);
+                addBadge(id, name);
+            }
+
+            updateSummary();
+        });
+
+        function updateSummary() {
+            let total = 0;
+
+            $('.seat-item.selected').each(function() {
+                total += parseFloat($(this).data('price'));
+            });
+
+            $('#totalPrice').text('$' + total.toFixed(2));
+            $('#seatsCountBadge').text(selectedSeats.length);
+
+            const btn = $('#btnBook');
+            const hasSeats = selectedSeats.length > 0;
+
+            btn.prop('disabled', !hasSeats);
+            $('#emptyMsg').toggle(!hasSeats);
+
+            if (hasSeats) {
+                if (!isUserAuthenticated) {
+                    btn.html('Login to Confirm <i class="bi bi-box-arrow-in-right ms-2"></i>');
+                    btn.removeClass('btn-primary').addClass('btn-dark'); 
+                } else {
+                    btn.html('Confirm Booking <i class="bi bi-credit-card ms-2"></i>');
+                    btn.removeClass('btn-dark').addClass('btn-primary');
+                }
+            } else {
+                btn.html('Confirm Booking <i class="bi bi-chevron-right ms-2"></i>');
+                btn.addClass('btn-primary');
+            }
+        }
+
+        function addBadge(id, name) {
+            let badge = `<span class="seat-badge shadow-sm" id="badge-${id}">${name}</span>`;
+            $('#selectedSeatsContainer').append(badge);
+        }
+
+        function removeBadge(id) {
+            $(`#badge-${id}`).remove();
+        }
+
+        $('#btnBook').click(function() {
+            if (!isUserAuthenticated) {
+                const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                window.location.href = '/Identity/Account/Login?ReturnUrl=' + returnUrl;
+                return;
+            }
+
+            let btn = $(this);
+            let originalText = btn.html();
+
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
+
+            $.ajax({
+                url: '/Customer/Booking/LockSeats',
+                type: 'POST',
+                data: {
+                    ShowId: @Model.ShowId,
+                    SelectedShowSeatIds: selectedSeats
+                },
+                success: function(res) {
+                    if (res.success) {
+                        window.location.href = '/Customer/Booking/Payment?bookingId=' + res.bookingId;
+                    } else {
+                        alert(res.message); 
+                        location.reload();
+                    }
+                },
+                error: function() {
+                    alert('Connection Error. Please try again.');
+                    btn.prop('disabled', false).html(originalText);
+                }
+            });
+        });
+    </script>
+}
