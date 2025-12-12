@@ -1,4 +1,4 @@
-# 🎬 CineMax - Advanced Cinema Booking System
+# 🎬 CineMax - Cinema Booking System
 
 **CineMax** is a comprehensive, full-stack web application designed to manage cinema operations and facilitate online ticket booking. Built with **ASP.NET Core MVC**, this project demonstrates a robust backend architecture capable of handling complex booking logic, concurrency, and real-time seat management.
 
